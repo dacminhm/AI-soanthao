@@ -1,0 +1,6 @@
+{
+  "name": "AI Hỗ Trợ Soạn Thảo Văn Bản Hành Chính - NĐ 30/2020/NĐ-CP",
+  "description": "Hệ thống hỗ trợ soạn thảo, thẩm định, soát xét và chuẩn hóa công văn hành chính theo Nghị định 30/2020/NĐ-CP cho Trung tâm Mã số, mã vạch Quốc gia (MSMV), tích hợp Gemini AI và Google Drive.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
