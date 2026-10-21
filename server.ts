@@ -109,7 +109,7 @@ Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đ�
 
     if (ai) {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-3.1-flash-lite',
         contents: fullPrompt,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -177,7 +177,7 @@ Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đ�
 function generateSmartFallback(mode: string, subject: string, recipient: string, opening: string, content: string, closing: string) {
   const normRecipient = recipient || 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia';
   const normSubject = subject ? (subject.startsWith('V/v ') ? subject : `V/v ${subject}`) : 'V/v báo cáo về tình hình triển khai đề án mã số mã vạch và truy xuất nguồn gốc năm 2026';
-  const normOpening = opening || 'Phúc đáp công văn số 384/TĐC-KHTC ngày 15/10/2026 của Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia về việc báo cáo tiến độ các đề án trọng điểm, Trung tâm Mã số, mã vạch Quốc gia có một số ý kiến như sau:';
+  const normOpening = opening || 'Phúc đáp công văn số ..../TĐC-TCCB ngày .../.../2026 của Ban Tổ chức Cán bộ, Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia về việc báo cáo tiến độ các đề án trọng điểm, Trung tâm Mã số, mã vạch Quốc gia có một số ý kiến như sau:';
 
   let items = [
     '1. Về tình hình triển khai hạ tầng kỹ thuật và cổng thông tin truy xuất: Trung tâm đã hoàn thành việc nâng cấp máy chủ cơ sở dữ liệu quốc gia về mã số mã vạch, kết nối chia sẻ dữ liệu thử nghiệm với hơn 350 doanh nghiệp sản xuất và xuất nhập khẩu trên toàn quốc.',
@@ -222,7 +222,7 @@ function generateSmartFallback(mode: string, subject: string, recipient: string,
       'Quyết định số 128/QĐ-TĐC quy định chức năng, nhiệm vụ của Trung tâm Mã số, mã vạch Quốc gia'
     ],
     cac_y_kien_noi_dung: items,
-    phan_ket_luan: 'Trung tâm Mã số, mã vạch Quốc gia xin kính gửi Quý Ủy ban để tổng hợp và xử lý các công việc tiếp theo.\nTrân trọng./.',
+    phan_ket_luan: 'Trung tâm Mã số, mã vạch Quốc gia xin kính gửi Quý Ban để tổng hợp và xử lý các công việc tiếp theo.\nTrân trọng./.',
     canh_bao_logic_va_ngu_phap: warnings
   };
 }
