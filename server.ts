@@ -40,7 +40,7 @@ Quy chuẩn nghiệp vụ bắt buộc tuân thủ:
    - Chủ tịch Nguyễn Nam Hải (để b/c);
    - Lưu VT, KHTC.
 7. Thẩm quyền ký: GIÁM ĐỐC - Bùi Bá Chính.
-8. Văn phong: Tuyệt đối chuẩn mực ngôn ngữ quản lý nhà nước, gãy gọn, khách quan, loại bỏ toàn bộ khẩu ngữ, từ ngữ cảm tính hoặc văn nói. Tự động rà soát tính logic, chỉ ra điểm mâu thuẫn hoặc thiếu sót về mặt nghiệp vụ/thời gian hoàn thành.
+8. Văn phong: Tuyệt đối chuẩn mực ngôn ngữ quản lý nhà nước, gãy gọn, khách quan, loại bỏ toàn bộ khẩu ngữ, từ ngữ cảm tính hoặc văn nói. Tự động rà soát tính logic, chỉ ra điểm mâu thuẫn hoặc thiếu sót về mặt nghiệp vụ/thời gian hoàn thành. Thực hiện rà soát và sửa lỗi chính tả tiếng Việt nghiêm ngặt cho toàn bộ văn bản.
 9. Lĩnh vực nghiệp vụ chuyên sâu: Mã số mã vạch quốc gia, tiêu chuẩn định danh GS1, hệ thống truy xuất nguồn gốc (TXNG) sản phẩm hàng hóa quốc gia, đề án 100/QĐ-TTg, tiêu chuẩn TCVN về mã số mã vạch và cổng thông tin truy xuất.
 
 ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
@@ -142,6 +142,19 @@ Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đ�
                   },
                   required: ['vi_tri', 'loi_nhan_xet', 'de_xuat_sua'],
                 },
+              },
+              kiem_tra_chinh_ta: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    tu_sai: { type: Type.STRING },
+                    tu_dung: { type: Type.STRING },
+                    vi_tri_doan: { type: Type.STRING },
+                  },
+                  required: ['tu_sai', 'tu_dung', 'vi_tri_doan'],
+                },
+                description: "Danh sách lỗi chính tả tiếng Việt phát hiện được và gợi ý sửa",
               },
             },
             required: ['trich_yeu', 'kinh_gui', 'phan_mo_dau', 'cac_y_kien_noi_dung', 'phan_ket_luan'],
