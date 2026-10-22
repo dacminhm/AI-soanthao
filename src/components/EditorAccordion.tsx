@@ -474,6 +474,23 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsBlock2Open(true);
+                  setTimeout(() => {
+                    document.getElementById('ai-chat-prompt-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const input = document.querySelector('#ai-chat-prompt-box textarea') as HTMLTextAreaElement | null;
+                    if (input) input.focus();
+                  }, 80);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-slate-900 text-amber-400 hover:bg-slate-800 rounded-lg transition shadow-2xs cursor-pointer border border-slate-700"
+                title="Cuộn nhanh tới khung Chat Gemini AI"
+              >
+                <i className="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                <span>Trợ lý AI</span>
+              </button>
               <span className="text-xs text-gray-400 font-mono hidden sm:inline">
                 MSMV AI Assist v2.4
               </span>
@@ -665,6 +682,22 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         <i className="fa-solid fa-align-justify"></i>
                       </button>
                     </div>
+
+                    <div className="flex items-center space-x-1 ml-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          document.getElementById('ai-chat-prompt-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          const input = document.querySelector('#ai-chat-prompt-box textarea') as HTMLTextAreaElement | null;
+                          if (input) input.focus();
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-amber-900 bg-amber-100/80 hover:bg-amber-200 border border-amber-300 rounded-lg transition cursor-pointer shadow-2xs"
+                        title="Cuộn tới Trợ lý AI ở cuối khối để viết lại toàn bộ hoặc tinh chỉnh"
+                      >
+                        <i className="fa-solid fa-wand-magic-sparkles text-[10px] text-amber-700"></i>
+                        <span>Viết lại với Gemini AI</span>
+                      </button>
+                    </div>
                   </div>
 
                   <textarea
@@ -750,6 +783,85 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   onChange={(e) => onUpdateField('closing', e.target.value)}
                   className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 focus:ring-amber-200"
                 />
+              </div>
+              {/* ============================================================== */}
+              {/* KHUNG CHAT COMMAND AI TINH GỌN DƯỚI CÙNG (CHAT PROMPT BOX)    */}
+              {/* ============================================================== */}
+              <div className="pt-3 border-t border-slate-200" id="ai-chat-prompt-box">
+                <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 border border-amber-200/80 rounded-2xl p-3 shadow-2xs space-y-2 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-100 transition-all">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-5 h-5 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-[10px] shadow-xs">
+                        <i className="fa-solid fa-wand-magic-sparkles"></i>
+                      </span>
+                      <span className="text-xs font-bold text-slate-800 tracking-tight">
+                        Trợ lý AI - Viết lại toàn bộ &amp; Tinh chỉnh
+                      </span>
+                      <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 hidden sm:inline">
+                        Gemini AI • Nghị định 30
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-medium hidden md:inline">
+                      Nhấn Enter để gửi lệnh
+                    </span>
+                  </div>
+
+                  <div className="relative flex items-center bg-white rounded-xl border border-slate-300 shadow-2xs pl-3 pr-1.5 py-1 focus-within:border-amber-600 transition">
+                    <textarea
+                      rows={2}
+                      value={aiCustomPrompt}
+                      onChange={(e) => setAiCustomPrompt(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey && !isProcessingAI) {
+                          e.preventDefault();
+                          handleCallAI('standardize');
+                        }
+                      }}
+                      placeholder="Nhập yêu cầu để AI viết lại toàn bộ hoặc tinh chỉnh (VD: Viết lại toàn bộ công văn theo hướng khẩn trương, bổ sung căn cứ pháp lý và thời hạn bàn giao...)"
+                      className="w-full text-xs text-slate-800 placeholder:text-slate-400 placeholder:italic outline-none resize-none font-normal leading-relaxed custom-scrollbar py-1"
+                    />
+
+                    <div className="flex items-center space-x-1 shrink-0 ml-2">
+                      {aiCustomPrompt && !isProcessingAI && (
+                        <button
+                          type="button"
+                          onClick={() => setAiCustomPrompt('')}
+                          className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer text-xs"
+                          title="Xóa yêu cầu"
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={isProcessingAI}
+                        onClick={() => handleCallAI('standardize')}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          isProcessingAI
+                            ? 'bg-amber-600 text-white'
+                            : aiCustomPrompt.trim()
+                            ? 'bg-amber-700 hover:bg-amber-800 text-white shadow-amber-700/20 ring-1 ring-amber-600'
+                            : 'bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700'
+                        }`}
+                        title={isProcessingAI ? 'Đang soạn thảo...' : 'Gửi yêu cầu tới Trợ lý AI (Enter)'}
+                      >
+                        {isProcessingAI ? (
+                          <i className="fa-solid fa-spinner fa-spin text-xs"></i>
+                        ) : (
+                          <i className="fa-solid fa-paper-plane text-xs"></i>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {isProcessingAI && (
+                    <div className="flex items-center space-x-2 text-[11px] text-amber-800 font-semibold px-2 animate-pulse">
+                      <i className="fa-solid fa-spinner fa-spin text-amber-600 text-xs"></i>
+                      <span>Trợ lý AI đang phân tích toàn văn và soạn thảo đồng bộ...</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
