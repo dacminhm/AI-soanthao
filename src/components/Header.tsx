@@ -54,15 +54,15 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="w-full px-4 sm:px-6 h-16 flex items-center justify-between gap-4 border-b border-gray-100">
         {/* Left: Brand, Decree Badge & Lock Indicator */}
         <div className="flex items-center space-x-2.5 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-800 to-red-600 flex items-center justify-center text-white shadow-sm ring-1 ring-red-200 shrink-0">
-            <i className="fa-solid fa-file-shield text-base text-amber-300"></i>
+          <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-amber-400 shadow-sm shrink-0">
+            <i className="fa-solid fa-file-shield text-base text-amber-400"></i>
           </div>
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-gray-900 text-sm sm:text-base leading-tight tracking-tight">
                 AI hỗ trợ soạn thảo văn bản
               </span>
-              <span className="bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
+              <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
                 Nghị định 30/2020/NĐ-CP
               </span>
             </div>
@@ -73,8 +73,8 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div className="hidden lg:flex items-center space-x-1.5 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-lg ml-1">
             <span className="text-[11px] text-slate-500 font-medium">Loại hình:</span>
-            <span className="inline-flex items-center text-[11px] font-bold text-red-800 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-              <i className="fa-solid fa-lock text-[9px] mr-1 text-red-700"></i> CỐ ĐỊNH: CÔNG VĂN
+            <span className="inline-flex items-center text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+              <i className="fa-solid fa-lock text-[9px] mr-1 text-amber-700"></i> CỐ ĐỊNH: CÔNG VĂN
             </span>
           </div>
         </div>
@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setCurrentTab('editor')}
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
               currentTab === 'editor'
-                ? 'bg-white text-red-900 shadow-xs font-bold'
+                ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -99,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setCurrentTab('archive')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
                 currentTab === 'archive'
-                  ? 'bg-white text-red-900 shadow-xs font-bold'
+                  ? 'bg-white text-slate-900 shadow-xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -123,13 +123,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <img
                     src={currentUser.picture}
                     alt={currentUser.name}
-                    className="w-7 h-7 rounded-full object-cover ring-2 ring-red-100 shrink-0"
+                    className="w-7 h-7 rounded-full object-cover ring-2 ring-slate-300 shrink-0"
                     onError={(e) => {
                       (e.currentTarget as HTMLElement).style.display = 'none';
                     }}
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-red-800 text-white font-bold text-xs flex items-center justify-center ring-2 ring-red-100 shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-slate-900 text-amber-400 font-bold text-xs flex items-center justify-center ring-2 ring-slate-300 shrink-0">
                     {currentUser.name.charAt(0)}
                   </div>
                 )}
@@ -139,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
                       {currentUser.name}
                     </span>
                     {currentUser.isAdmin && (
-                      <span className="bg-red-100 text-red-800 border border-red-200 text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap">
+                      <span className="bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider whitespace-nowrap">
                         Admin
                       </span>
                     )}
@@ -160,10 +160,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <img
                         src={currentUser.picture}
                         alt={currentUser.name}
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-red-100 shrink-0"
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-300 shrink-0"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-red-800 text-white font-bold text-sm flex items-center justify-center ring-2 ring-red-100 shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-slate-900 text-amber-400 font-bold text-sm flex items-center justify-center ring-2 ring-slate-300 shrink-0">
                         {currentUser.name.charAt(0)}
                       </div>
                     )}
@@ -174,8 +174,8 @@ export const Header: React.FC<HeaderProps> = ({
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                             currentUser.isAdmin
-                              ? 'bg-red-100 text-red-800 border border-red-200'
-                              : 'bg-blue-100 text-blue-800 border border-blue-200'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                              : 'bg-slate-100 text-slate-800 border border-slate-300'
                           }`}
                         >
                           {currentUser.isAdmin ? 'Quản trị viên (Admin)' : 'Chuyên viên thường'}
@@ -249,9 +249,9 @@ export const Header: React.FC<HeaderProps> = ({
                       setIsDropdownOpen(false);
                       onLogout();
                     }}
-                    className="w-full px-4 py-2 text-xs text-left text-red-600 hover:bg-red-50 flex items-center space-x-2 transition cursor-pointer font-semibold"
+                    className="w-full px-4 py-2 text-xs text-left text-amber-700 hover:bg-amber-50 flex items-center space-x-2 transition cursor-pointer font-semibold"
                   >
-                    <i className="fa-solid fa-arrow-right-from-bracket text-red-500 w-4"></i>
+                    <i className="fa-solid fa-arrow-right-from-bracket text-amber-600 w-4"></i>
                     <span>Đăng xuất</span>
                   </button>
                 </div>
@@ -279,7 +279,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenAdminModal}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-800 hover:bg-red-900 text-white border border-red-900 rounded-lg text-xs font-bold shadow-xs transition duration-150 cursor-pointer shrink-0"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg text-xs font-bold shadow-xs transition duration-150 cursor-pointer shrink-0"
             >
               <i className="fa-solid fa-gear text-xs"></i>
               <span>Quản lý mẫu biểu</span>
@@ -289,99 +289,133 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* HÀNG 2: SUB BAR - THANH TIẾN TRÌNH 3 BƯỚC CĂN GIỮA MÀN HÌNH               */}
+      {/* HÀNG 2: SUB BAR - THANH TIẾN TRÌNH & CỤM NÚT TÁC VỤ NHANH                 */}
       {/* ========================================================================= */}
       {currentTab === 'editor' && (
-        <div className="bg-gray-50/95 border-b border-gray-200 px-2 sm:px-4">
-          <div className="w-full max-w-2xl mx-auto flex items-center justify-between px-4 py-2 text-xs font-semibold">
-            {/* Bước 1 */}
-            <button
-              type="button"
-              onClick={() => onSelectStep?.(1)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer shrink-0 ${
-                activeStep === 1
-                  ? 'bg-red-800 text-white font-bold shadow-2xs ring-2 ring-red-200'
-                  : activeStep > 1
-                  ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-              title="Nhấn để chuyển đến Khối 1: Thể thức & Thông tin đơn vị"
-            >
-              <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
+        <div className="bg-gray-50/95 border-b border-gray-200 px-3 sm:px-6 py-2">
+          <div className="w-full flex items-center justify-between gap-2 sm:gap-4 text-xs font-semibold">
+            {/* Trái: Badge đồng bộ bản in A4 */}
+            <div className="hidden xl:flex items-center space-x-2 text-slate-500 text-[11px] font-medium min-w-[150px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200"></span>
+              <span>Đồng bộ thời gian thực A4</span>
+            </div>
+
+            {/* Giữa: Thanh tiến trình 3 bước */}
+            <div className="flex-1 max-w-xl mx-auto flex items-center justify-between">
+              {/* Bước 1 */}
+              <button
+                type="button"
+                onClick={() => onSelectStep?.(1)}
+                className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer shrink-0 ${
                   activeStep === 1
-                    ? 'bg-white text-red-900'
+                    ? 'bg-amber-600 text-white font-bold shadow-2xs ring-2 ring-amber-200'
                     : activeStep > 1
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
+                title="Nhấn để chuyển đến Khối 1: Thể thức & Thông tin đơn vị"
               >
-                {activeStep > 1 ? <i className="fa-solid fa-check"></i> : '1'}
-              </div>
-              <span className="tracking-tight whitespace-nowrap">1. Thể thức &amp; Đơn vị</span>
-            </button>
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
+                    activeStep === 1
+                      ? 'bg-white text-amber-800'
+                      : activeStep > 1
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}
+                >
+                  {activeStep > 1 ? <i className="fa-solid fa-check"></i> : '1'}
+                </div>
+                <span className="tracking-tight whitespace-nowrap">1. Thể thức &amp; Đơn vị</span>
+              </button>
 
-            <div
-              className={`flex-1 h-[2px] mx-2 sm:mx-4 transition-colors duration-300 min-w-[12px] sm:min-w-[20px] ${
-                activeStep > 1 ? 'bg-emerald-500' : 'bg-slate-300'
-              }`}
-            ></div>
-
-            {/* Bước 2 */}
-            <button
-              type="button"
-              onClick={() => onSelectStep?.(2)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer shrink-0 ${
-                activeStep === 2
-                  ? 'bg-red-800 text-white font-bold shadow-2xs ring-2 ring-red-200'
-                  : activeStep > 2
-                  ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-              title="Nhấn để chuyển đến Khối 2: Soạn thảo nội dung & Trợ lý AI"
-            >
               <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
+                className={`flex-1 h-[2px] mx-1.5 sm:mx-3 transition-colors duration-300 min-w-[10px] sm:min-w-[16px] ${
+                  activeStep > 1 ? 'bg-emerald-500' : 'bg-slate-300'
+                }`}
+              ></div>
+
+              {/* Bước 2 */}
+              <button
+                type="button"
+                onClick={() => onSelectStep?.(2)}
+                className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer shrink-0 ${
                   activeStep === 2
-                    ? 'bg-white text-red-900'
+                    ? 'bg-amber-600 text-white font-bold shadow-2xs ring-2 ring-amber-200'
                     : activeStep > 2
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
+                title="Nhấn để chuyển đến Khối 2: Soạn thảo nội dung & Trợ lý AI"
               >
-                {activeStep > 2 ? <i className="fa-solid fa-check"></i> : '2'}
-              </div>
-              <span className="tracking-tight whitespace-nowrap">2. Soạn thảo Công văn AI</span>
-            </button>
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
+                    activeStep === 2
+                      ? 'bg-white text-amber-800'
+                      : activeStep > 2
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}
+                >
+                  {activeStep > 2 ? <i className="fa-solid fa-check"></i> : '2'}
+                </div>
+                <span className="tracking-tight whitespace-nowrap">2. Soạn thảo Công văn AI</span>
+              </button>
 
-            <div
-              className={`flex-1 h-[2px] mx-2 sm:mx-4 transition-colors duration-300 min-w-[12px] sm:min-w-[20px] ${
-                activeStep > 2 ? 'bg-emerald-500' : 'bg-slate-300'
-              }`}
-            ></div>
-
-            {/* Bước 3 */}
-            <button
-              type="button"
-              onClick={() => onSelectStep?.(3)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer shrink-0 ${
-                activeStep === 3
-                  ? 'bg-red-800 text-white font-bold shadow-2xs ring-2 ring-red-200'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-              title="Nhấn để chuyển đến Bước 3: Ký duyệt & Xuất bản"
-            >
               <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
-                  activeStep === 3
-                    ? 'bg-white text-red-900'
-                    : 'bg-slate-200 text-slate-600'
+                className={`flex-1 h-[2px] mx-1.5 sm:mx-3 transition-colors duration-300 min-w-[10px] sm:min-w-[16px] ${
+                  activeStep > 2 ? 'bg-emerald-500' : 'bg-slate-300'
                 }`}
+              ></div>
+
+              {/* Bước 3 */}
+              <button
+                type="button"
+                onClick={() => onSelectStep?.(3)}
+                className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer shrink-0 ${
+                  activeStep === 3
+                    ? 'bg-amber-600 text-white font-bold shadow-2xs ring-2 ring-amber-200'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+                title="Nhấn để chuyển đến Bước 3: Ký duyệt & Xuất bản"
               >
-                3
-              </div>
-              <span className="tracking-tight whitespace-nowrap">3. Ký duyệt &amp; Xuất bản</span>
-            </button>
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
+                    activeStep === 3
+                      ? 'bg-white text-amber-800'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}
+                >
+                  3
+                </div>
+                <span className="tracking-tight whitespace-nowrap">3. Ký duyệt &amp; Xuất bản</span>
+              </button>
+            </div>
+
+            {/* Phải: Cụm nút tác vụ nhanh */}
+            <div className="flex items-center space-x-2 shrink-0 min-w-[150px] justify-end">
+              {/* Nút 1: Icon Lưu Drive */}
+              <button
+                type="button"
+                onClick={onSaveToDrive}
+                className="w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-300 flex items-center justify-center transition shadow-2xs cursor-pointer active:scale-95"
+                title="Lưu dự thảo vào Google Drive"
+              >
+                <i className="fa-solid fa-cloud-arrow-up text-xs text-amber-700"></i>
+              </button>
+
+              {/* Nút 2: Nút xuất bản chính Xuất file Word để in */}
+              <button
+                type="button"
+                onClick={onExportDocx}
+                className="px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 shadow-sm hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer active:scale-95"
+                title="Tải file Word (.docx) chuẩn in ấn Nghị định 30/2020/NĐ-CP"
+              >
+                <i className="fa-solid fa-file-word text-xs"></i>
+                <span className="hidden sm:inline">Xuất file Word để in</span>
+                <span className="sm:hidden">Xuất Word</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

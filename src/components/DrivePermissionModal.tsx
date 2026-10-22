@@ -56,20 +56,20 @@ export const DrivePermissionModal: React.FC<DrivePermissionModalProps> = ({
         aria-modal="true"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-800 to-red-950 p-5 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-xs flex items-center justify-center border border-white/20 shadow-inner">
               <i className="fa-brands fa-google-drive text-2xl text-amber-300"></i>
             </div>
             <div>
               <h3 className="text-base font-bold tracking-tight">Cấp quyền Google Drive</h3>
-              <p className="text-[11px] text-red-200 font-medium">Trung tâm Mã số, mã vạch Quốc gia</p>
+              <p className="text-[11px] text-amber-300 font-medium">Trung tâm Mã số, mã vạch Quốc gia</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-red-200 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
             title="Đóng"
           >
             <i className="fa-solid fa-xmark text-sm"></i>
@@ -92,22 +92,22 @@ export const DrivePermissionModal: React.FC<DrivePermissionModalProps> = ({
 
           <div className="space-y-2">
             <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-              <i className="fa-solid fa-cloud-arrow-up text-red-800 text-xs"></i>
+              <i className="fa-solid fa-cloud-arrow-up text-amber-700 text-xs"></i>
               <span>{actionReason}</span>
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
               Ứng dụng chỉ yêu cầu quyền tối thiểu (<strong>scope: drive.file</strong>) nhằm:
             </p>
             <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside pl-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-              <li>Tạo và quản lý thư mục <code className="text-red-900 font-semibold bg-red-50 px-1 rounded">AI Văn Bản - Dự thảo</code>.</li>
+              <li>Tạo và quản lý thư mục <code className="text-amber-900 font-semibold bg-amber-50 px-1 rounded">AI Văn Bản - Dự thảo</code>.</li>
               <li>Lưu trữ các tệp công văn dự thảo <code className="font-semibold">.docx</code> do chính bạn tạo.</li>
               <li>Tuyệt đối <strong>không truy cập hay chỉnh sửa</strong> bất kỳ tệp dữ liệu cá nhân nào khác của bạn.</li>
             </ul>
           </div>
 
           {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-center space-x-2 animate-in fade-in">
-              <i className="fa-solid fa-circle-exclamation text-red-600 shrink-0"></i>
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center space-x-2 animate-in fade-in">
+              <i className="fa-solid fa-circle-exclamation text-amber-600 shrink-0"></i>
               <span className="text-[11px] font-medium">{errorMessage}</span>
             </div>
           )}
@@ -127,7 +127,7 @@ export const DrivePermissionModal: React.FC<DrivePermissionModalProps> = ({
               <button
                 type="button"
                 onClick={onOpenPrivacy}
-                className="hover:text-red-800 underline transition cursor-pointer"
+                className="hover:text-amber-800 underline transition cursor-pointer"
               >
                 Quyền riêng tư
               </button>
@@ -138,7 +138,7 @@ export const DrivePermissionModal: React.FC<DrivePermissionModalProps> = ({
                 <button
                   type="button"
                   onClick={onOpenTerms}
-                  className="hover:text-red-800 underline transition cursor-pointer"
+                  className="hover:text-amber-800 underline transition cursor-pointer"
                 >
                   Điều khoản
                 </button>
@@ -159,7 +159,7 @@ export const DrivePermissionModal: React.FC<DrivePermissionModalProps> = ({
               type="button"
               onClick={handleDirectConnect}
               disabled={isRequesting}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-red-800 hover:bg-red-900 active:scale-95 rounded-xl shadow-md hover:shadow-lg transition flex items-center space-x-2 cursor-pointer disabled:opacity-60"
+              className="px-5 py-2.5 text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 active:scale-95 rounded-xl shadow-md hover:shadow-lg transition flex items-center space-x-2 cursor-pointer disabled:opacity-60"
             >
               {isRequesting ? (
                 <>

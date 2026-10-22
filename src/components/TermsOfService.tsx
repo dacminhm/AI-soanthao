@@ -32,7 +32,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
       {/* Tóm tắt điều khoản */}
       <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
         <h3 className="font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2">
-          <i className="fa-solid fa-file-contract text-red-800"></i>
+          <i className="fa-solid fa-file-contract text-amber-700"></i>
           Phạm vi &amp; Mục đích áp dụng
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
@@ -43,7 +43,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
       {/* Điều 1 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">1</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">1</span>
           Quy chuẩn Thể thức bắt buộc (Nghị định 30/2020/NĐ-CP)
         </h3>
         <p>
@@ -59,7 +59,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
       {/* Điều 2 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">2</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">2</span>
           Trách nhiệm của Người dùng &amp; Người ký duyệt
         </h3>
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
@@ -80,7 +80,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
       {/* Điều 3 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">3</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">3</span>
           Tích hợp Dịch vụ Google Drive &amp; Bản quyền Tệp tin
         </h3>
         <p>
@@ -96,7 +96,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
       {/* Điều 4 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">4</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">4</span>
           Thay đổi &amp; Cập nhật Điều khoản
         </h3>
         <p className="text-xs text-slate-600">
@@ -107,12 +107,12 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
       {/* Điều 5 */}
       <section className="space-y-2 border-t border-slate-200 pt-4">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">5</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">5</span>
           Thông tin liên hệ &amp; Hỗ trợ nghiệp vụ
         </h3>
         <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1 text-slate-600">
           <p><strong>Cơ quan:</strong> TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA</p>
-          <p><strong>Email tiếp nhận góp ý / Báo cáo sự cố:</strong> <a href="mailto:dacminhm@gmail.com" className="text-red-800 font-semibold underline">dacminhm@gmail.com</a></p>
+          <p><strong>Email tiếp nhận góp ý / Báo cáo sự cố:</strong> <a href="mailto:dacminhm@gmail.com" className="text-amber-700 font-semibold underline">dacminhm@gmail.com</a></p>
           <p><strong>Hotline kỹ thuật:</strong> (+84) 24 3756 4269</p>
         </div>
       </section>
@@ -128,7 +128,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 bg-red-800 hover:bg-red-900 text-white text-xs font-bold rounded-lg transition shadow-sm cursor-pointer"
+              className="px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-lg transition shadow-sm cursor-pointer"
             >
               Quay lại ứng dụng
             </button>

@@ -115,59 +115,21 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
     }
   };
 
-  // Validate inputs before calling Gemini AI
-  const validateInputsBeforeAI = (): boolean => {
-    const isOpeningEmpty = !doc.opening || !doc.opening.trim();
-    const isContentEmpty = !doc.content || !doc.content.trim();
+  // Trigger Gemini AI processing (Full Document Rewrite & Refinement)
+  const handleCallAI = async (mode: 'standardize' | 'audit' | 'suggest_msmv' = 'standardize') => {
+    const hasPrompt = aiCustomPrompt && aiCustomPrompt.trim().length > 0;
+    const hasExistingContent =
+      (doc.content && doc.content.trim().length > 0) ||
+      (doc.opening && doc.opening.trim().length > 0) ||
+      (doc.subject && doc.subject.trim().length > 0);
 
-    // Trường hợp 3: Cả 2 ô đều trống
-    if (isOpeningEmpty && isContentEmpty) {
-      setAiValidationErrors({ opening: true, content: true });
+    if (!hasPrompt && !hasExistingContent) {
       setIsBlock2Open(true);
-      setTimeout(() => {
-        openingInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        openingInputRef.current?.focus();
-      }, 50);
-      onNotify('⚠️ Vui lòng điền nội dung mở đầu và các ý chính cần truyền tải trước khi yêu cầu Trợ lý AI hỗ trợ viết.');
-      return false;
-    }
-
-    // Trường hợp 1: Ô [Đoạn mở đầu] đang trống hoặc chưa nhập lý do/dẫn chiếu
-    if (isOpeningEmpty) {
-      setAiValidationErrors({ opening: true, content: false });
-      setIsBlock2Open(true);
-      setTimeout(() => {
-        openingInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        openingInputRef.current?.focus();
-      }, 50);
-      onNotify("⚠️ Vui lòng nhập thông tin tại 'Đoạn mở đầu công văn' (nêu lý do ban hành, dẫn chiếu công văn đến hoặc bối cảnh xử lý) để AI có cơ sở hoàn thiện văn bản.");
-      return false;
-    }
-
-    // Trường hợp 2: Khung [Nội dung các điểm / điều khoản] đang hoàn toàn trống
-    if (isContentEmpty) {
-      setAiValidationErrors({ opening: false, content: true });
-      setIsBlock2Open(true);
-      setTimeout(() => {
-        contentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        contentInputRef.current?.focus();
-      }, 50);
-      onNotify("⚠️ Vui lòng gõ ít nhất 1 - 2 ý chính hoặc gạch đầu dòng nháp về nội dung cần giải quyết để Trợ lý AI hỗ trợ viết và mở rộng.");
-      return false;
-    }
-
-    // Hợp lệ: Cả 2 ô đều đã có nội dung
-    setAiValidationErrors({ opening: false, content: false });
-    return true;
-  };
-
-  // Trigger Gemini AI processing
-  const handleCallAI = async (mode: 'standardize' | 'audit' | 'suggest_msmv') => {
-    // 1. Kiểm tra tuần tự nội dung của cả 2 ô trước khi gửi API
-    if (!validateInputsBeforeAI()) {
+      onNotify('⚠️ Vui lòng nhập yêu cầu vào ô chat Trợ lý AI hoặc điền nội dung dự thảo trước khi gửi.');
       return;
     }
 
+    setAiValidationErrors({ opening: false, content: false });
     setIsProcessingAI(true);
     setActiveAIMode(mode);
     try {
@@ -197,16 +159,14 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
         if (d.phan_ket_luan) {
           onUpdateField('closing', d.phan_ket_luan.replace(/Trân trọng\.\/\./g, '').trim());
         }
+        if (d.can_cu_phap_ly && Array.isArray(d.can_cu_phap_ly) && d.can_cu_phap_ly.length > 0) {
+          onUpdateField('legalBases', d.can_cu_phap_ly);
+        }
         if (d.canh_bao_logic_va_ngu_phap && Array.isArray(d.canh_bao_logic_va_ngu_phap)) {
           setAiWarnings(d.canh_bao_logic_va_ngu_phap);
         }
 
-        const modeLabels = {
-          standardize: 'Chuẩn hóa thể thức NĐ 30',
-          audit: 'Soát xét logic & Pháp lý',
-          suggest_msmv: 'Gợi ý chuyên môn MSMV',
-        };
-        onNotify(`Trợ lý AI đã hoàn tất ${modeLabels[mode]} thành công!`);
+        onNotify('✨ Trợ lý AI đã soạn thảo và đồng bộ toàn văn công văn thành công!');
       } else {
         onNotify('Không nhận được kết quả từ Trợ lý AI. Vui lòng thử lại.');
       }
@@ -254,7 +214,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
         <div
           id="block-step-1"
           className={`bg-white rounded-xl shadow-2xs overflow-hidden transition-all ${
-            activeStep === 1 ? 'ring-2 ring-red-200 border-2 border-red-800/40' : 'border border-gray-200'
+            activeStep === 1 ? 'ring-2 ring-slate-300 border-2 border-slate-400' : 'border border-gray-200'
           }`}
           data-purpose="accordion-general-info"
           onFocusCapture={() => onStepChange?.(1)}
@@ -269,7 +229,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
             className="w-full px-5 py-3.5 bg-gray-50/90 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-100/70 transition"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-7 h-7 rounded-lg bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold">
+              <div className="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-xs font-bold">
                 1
               </div>
               <div className="text-left">
@@ -311,7 +271,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       <button
                         type="button"
                         onClick={() => onRequestUnlock('parentAgency', 'Cơ quan chủ quản')}
-                        className="text-[11px] text-red-800 hover:text-red-900 font-semibold"
+                        className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
                       >
                         Mở khóa sửa
                       </button>
@@ -332,7 +292,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     className={`w-full text-xs rounded-lg font-medium transition ${
                       !unlockedFields.parentAgency
                         ? 'bg-gray-100 border-gray-300 text-gray-700 cursor-not-allowed focus:ring-0'
-                        : 'bg-white border-red-700 text-gray-900 ring-1 ring-red-200'
+                        : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
                     }`}
                   />
                 </div>
@@ -350,7 +310,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       <button
                         type="button"
                         onClick={() => onRequestUnlock('issuingAgency', 'Cơ quan ban hành')}
-                        className="text-[11px] text-red-800 hover:text-red-900 font-semibold"
+                        className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
                       >
                         Mở khóa sửa
                       </button>
@@ -371,7 +331,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     className={`w-full text-xs rounded-lg font-bold transition ${
                       !unlockedFields.issuingAgency
                         ? 'bg-gray-100 border-gray-300 text-gray-700 cursor-not-allowed focus:ring-0'
-                        : 'bg-white border-red-700 text-gray-900 ring-1 ring-red-200'
+                        : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
                     }`}
                   />
                 </div>
@@ -392,7 +352,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       value={doc.docNumber}
                       onChange={(e) => onUpdateField('docNumber', e.target.value)}
                       placeholder="125"
-                      className="flex-1 min-w-0 block w-full px-3 py-1.5 text-xs border-gray-300 focus:ring-red-600 focus:border-red-600 font-medium"
+                      className="flex-1 min-w-0 block w-full px-3 py-1.5 text-xs border-gray-300 focus:ring-amber-600 focus:border-amber-600 font-medium"
                     />
                     <div className="relative flex items-center">
                       <input
@@ -415,7 +375,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         <button
                           type="button"
                           onClick={() => onRequestUnlock('docSymbol', 'Ký hiệu /MSMV-KHTC')}
-                          className="absolute right-2 text-gray-400 hover:text-red-800"
+                          className="absolute right-2 text-gray-400 hover:text-amber-800"
                           title="Mở khóa ký hiệu"
                         >
                           <i className="fa-solid fa-lock text-[10px]"></i>
@@ -442,7 +402,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     />
                     <i className="fa-solid fa-lock absolute left-3 top-2.5 text-xs text-gray-400"></i>
                   </div>
-                  <p className="text-[10px] text-red-800 font-medium mt-1">
+                  <p className="text-[10px] text-slate-600 font-medium mt-1">
                     ✓ Đã cố định định dạng công văn theo đúng mẫu hành chính
                   </p>
                 </div>
@@ -458,7 +418,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     type="text"
                     value={doc.subject}
                     onChange={(e) => onUpdateField('subject', e.target.value)}
-                    className="w-full text-xs rounded-lg border-gray-300 focus:ring-red-600 focus:border-red-600 font-normal text-center"
+                    className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600 font-normal text-center"
                   />
                 </div>
                 <div>
@@ -469,7 +429,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     type="text"
                     value={doc.recipient}
                     onChange={(e) => onUpdateField('recipient', e.target.value)}
-                    className="w-full text-xs rounded-lg border-gray-300 focus:ring-red-600 focus:border-red-600"
+                    className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600"
                   />
                 </div>
               </div>
@@ -484,7 +444,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
           id="block-step-2"
           className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all ${
             activeStep === 2
-              ? 'border-2 border-red-700/60 ring-2 ring-red-200/50'
+              ? 'border-2 border-slate-300 ring-2 ring-slate-100 shadow-sm'
               : 'border border-gray-200'
           }`}
           data-purpose="accordion-body-content"
@@ -497,18 +457,18 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               setIsBlock2Open(next);
               if (next) onStepChange?.(2);
             }}
-            className="px-5 py-3.5 bg-gradient-to-r from-red-50 to-white flex items-center justify-between border-b border-red-100 cursor-pointer"
+            className="px-5 py-3.5 bg-gradient-to-r from-slate-100 to-white flex items-center justify-between border-b border-slate-200 cursor-pointer"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-7 h-7 rounded-lg bg-red-800 text-white flex items-center justify-center text-xs font-bold shadow-2xs">
+              <div className="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-xs font-bold shadow-2xs">
                 2
               </div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-red-950">
+                <h2 className="text-sm font-bold text-slate-900">
                   Nội dung thân công văn &amp; Trợ lý AI
                 </h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800 animate-pulse">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 mr-1.5"></span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mr-1.5"></span>
                   Đang soạn thảo
                 </span>
               </div>
@@ -527,82 +487,11 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
 
           {isBlock2Open && (
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
-              {/* ============================================================== */}
-              {/* CỤM HỘP ĐIỀU KHIỂN TRỢ LÝ AI (AI COMMAND BOX) TRANG NHÃ       */}
-              {/* ============================================================== */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-2xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-6 h-6 rounded-lg bg-red-800 text-white flex items-center justify-center text-xs shadow-2xs">
-                      <i className="fa-solid fa-wand-magic-sparkles"></i>
-                    </span>
-                    <span className="text-xs font-bold text-gray-900 tracking-tight">
-                      Trợ lý AI hỗ trợ viết &amp; hoàn thiện văn bản
-                    </span>
-                    <span className="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200/80">
-                      Nghị định 30/2020/NĐ-CP
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-gray-500 hidden sm:inline font-medium">
-                    Tự động chuẩn hóa &amp; phát triển ý văn bản
-                  </span>
-                </div>
-
-                {/* Ô nhập câu lệnh (Prompt Input) & Nút hành động chính */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={aiCustomPrompt}
-                      onChange={(e) => setAiCustomPrompt(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !isProcessingAI) {
-                          e.preventDefault();
-                          handleCallAI('standardize');
-                        }
-                      }}
-                      placeholder="Gõ yêu cầu cụ thể cho AI (Ví dụ: Viết lại gãy gọn, bổ sung ý về tiến độ nghiệm thu, thêm đề xuất kinh phí...)"
-                      className="w-full bg-white text-xs text-gray-800 placeholder:text-gray-400 placeholder:italic rounded-lg border border-slate-300 hover:border-slate-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 py-2.5 pl-3.5 pr-8 outline-none transition shadow-2xs font-normal"
-                    />
-                    {aiCustomPrompt && (
-                      <button
-                        type="button"
-                        onClick={() => setAiCustomPrompt('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs p-1"
-                        title="Xóa yêu cầu"
-                      >
-                        <i className="fa-solid fa-xmark"></i>
-                      </button>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={isProcessingAI}
-                    onClick={() => handleCallAI('standardize')}
-                    className="px-4 py-2.5 bg-red-800 hover:bg-red-900 active:bg-red-950 text-white font-bold rounded-lg text-xs shadow-sm hover:shadow-md transition-all flex items-center justify-center space-x-2 shrink-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                    title="Gửi nội dung và yêu cầu đến Trợ lý AI"
-                  >
-                    {isProcessingAI ? (
-                      <>
-                        <i className="fa-solid fa-spinner fa-spin text-xs"></i>
-                        <span>Đang phân tích &amp; soạn thảo văn bản...</span>
-                      </>
-                    ) : (
-                      <>
-                        <i className="fa-solid fa-wand-magic-sparkles text-amber-300 text-xs"></i>
-                        <span>✨ Trợ lý AI hỗ trợ viết</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
               {/* Đoạn mở đầu công văn (Dẫn chiếu công văn đến) - Nổi bật, nền trắng, viền rõ, có icon bút chì */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-md bg-red-100 text-red-800 flex items-center justify-center text-[10px]">
+                    <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center text-[10px]">
                       <i className="fa-solid fa-feather-pointed"></i>
                     </span>
                     <span>Đoạn mở đầu công văn (Dẫn chiếu công văn đến)</span>
@@ -610,7 +499,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   <button
                     type="button"
                     onClick={handleApplySampleOpening}
-                    className="text-[11px] text-red-800 hover:text-red-950 font-semibold inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-md border border-red-200 cursor-pointer transition shadow-2xs"
+                    className="text-[11px] text-amber-800 hover:text-amber-950 font-semibold inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-md border border-amber-200 cursor-pointer transition shadow-2xs"
                     title="Chèn mẫu câu mở đầu phúc đáp chuẩn của Trung tâm"
                   >
                     <i className="fa-solid fa-wand-magic-sparkles text-[10px] text-amber-600"></i>
@@ -632,20 +521,20 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     placeholder="Nhập nội dung dẫn chiếu văn bản đến hoặc lý do ban hành công văn tại đây..."
                     className={`w-full bg-white text-xs leading-relaxed text-slate-800 placeholder:text-slate-400 placeholder:italic rounded-lg shadow-sm p-3.5 pr-10 outline-none transition-all resize-y font-normal ${
                       aiValidationErrors.opening
-                        ? 'border-2 border-red-500 ring-2 ring-red-100 bg-red-50/20'
-                        : 'border border-slate-300 hover:border-slate-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                        ? 'border-2 border-amber-600 ring-2 ring-amber-100 bg-amber-50/20'
+                        : 'border border-slate-300 hover:border-slate-400 focus:border-amber-600 focus:ring-2 focus:ring-amber-100'
                     }`}
                   />
                   {/* Icon chiếc bút chì nhỏ ở góc phải trên của ô để nhấn mạnh tính năng cho phép nhập liệu */}
                   <div
-                    className="absolute top-3 right-3 text-slate-400 group-hover:text-red-700 transition pointer-events-none p-0.5"
+                    className="absolute top-3 right-3 text-slate-400 group-hover:text-amber-700 transition pointer-events-none p-0.5"
                     title="Ô nhập liệu cho phép chỉnh sửa"
                   >
                     <i className="fa-solid fa-pen text-xs"></i>
                   </div>
                 </div>
                 {aiValidationErrors.opening && (
-                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1.5 mt-1 animate-in fade-in duration-150">
+                  <p className="text-[11px] text-amber-800 font-semibold flex items-center gap-1.5 mt-1 animate-in fade-in duration-150">
                     <i className="fa-solid fa-triangle-exclamation text-xs text-amber-500"></i>
                     <span>Vui lòng nhập thông tin tại ô Đoạn mở đầu công văn trước khi yêu cầu Trợ lý AI.</span>
                   </p>
@@ -670,7 +559,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         onUpdateField('content', updatedContent);
                         onNotify(`Đã chèn căn cứ "${base}" vào thân công văn.`);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] bg-slate-100 hover:bg-red-50 hover:text-red-900 hover:border-red-300 border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 font-medium transition cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] bg-slate-100 hover:bg-amber-50 hover:text-amber-900 hover:border-amber-300 border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 font-medium transition cursor-pointer"
                     >
                       <i className="fa-solid fa-scale-balanced text-[10px] text-slate-400"></i>
                       <span>{base}</span>
@@ -683,7 +572,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center">
-                    <i className="fa-solid fa-pen-nib text-red-800 mr-1.5"></i>
+                    <i className="fa-solid fa-pen-nib text-amber-800 mr-1.5"></i>
                     Nội dung các điểm / điều khoản
                   </label>
                   <span className="text-xs text-gray-500 font-medium hidden sm:inline">
@@ -695,7 +584,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                 <div
                   className={`rounded-xl overflow-hidden bg-white shadow-2xs transition-all ${
                     aiValidationErrors.content
-                      ? 'border-2 border-red-500 ring-2 ring-red-100 bg-red-50/10'
+                      ? 'border-2 border-amber-600 ring-2 ring-amber-100 bg-amber-50/10'
                       : 'border border-gray-300'
                   }`}
                 >
@@ -760,7 +649,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       </button>
                       <button
                         type="button"
-                        className="p-1.5 hover:bg-gray-200 rounded text-red-800 font-semibold"
+                        className="p-1.5 hover:bg-gray-200 rounded text-slate-700 font-semibold"
                         title="Thụt lề chuẩn 1.27cm"
                       >
                         <i className="fa-solid fa-indent"></i>
@@ -770,7 +659,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     <div className="flex items-center space-x-1">
                       <button
                         type="button"
-                        className="p-1.5 hover:bg-gray-200 rounded text-red-800 font-bold"
+                        className="p-1.5 hover:bg-gray-200 rounded text-slate-800 font-bold"
                         title="Căn đều 2 bên (Justified) theo NĐ 30"
                       >
                         <i className="fa-solid fa-align-justify"></i>
@@ -792,7 +681,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     className="w-full p-4 border-0 text-xs focus:ring-0 leading-relaxed text-gray-800 resize-y font-sans outline-none"
                   />
                   {aiValidationErrors.content && (
-                    <div className="bg-red-50 border-t border-red-200 px-3 py-1.5 text-[11px] text-red-700 font-semibold flex items-center gap-1.5 animate-in fade-in duration-150">
+                    <div className="bg-amber-50 border-t border-amber-200 px-3 py-1.5 text-[11px] text-amber-800 font-semibold flex items-center gap-1.5 animate-in fade-in duration-150">
                       <i className="fa-solid fa-triangle-exclamation text-xs text-amber-500"></i>
                       <span>Vui lòng gõ ít nhất 1 - 2 ý chính hoặc gạch đầu dòng nháp về nội dung cần giải quyết.</span>
                     </div>
@@ -826,13 +715,13 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         className="p-3 bg-white rounded-lg border border-amber-200/80 shadow-2xs space-y-1.5 text-xs"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-red-900 bg-red-50 px-2 py-0.5 rounded text-[11px]">
+                          <span className="font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded text-[11px]">
                             {warn.vi_tri}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleApplyWarningFix(warn, wIdx)}
-                            className="px-2.5 py-1 bg-red-800 hover:bg-red-900 text-white rounded text-[11px] font-bold shadow-2xs transition flex items-center space-x-1"
+                            className="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-[11px] font-bold shadow-2xs transition flex items-center space-x-1"
                           >
                             <i className="fa-solid fa-check text-[10px]"></i>
                             <span>Chấp nhận sửa đổi</span>
@@ -859,7 +748,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   rows={2}
                   value={doc.closing}
                   onChange={(e) => onUpdateField('closing', e.target.value)}
-                  className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 focus:ring-red-200"
+                  className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 focus:ring-amber-200"
                 />
               </div>
             </div>
@@ -873,7 +762,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
           id="block-step-3"
           className={`bg-white rounded-xl shadow-2xs overflow-hidden transition-all ${
             activeStep === 3
-              ? 'border-2 border-red-700/60 ring-2 ring-red-200/50'
+              ? 'border-2 border-slate-300 ring-2 ring-slate-100 shadow-sm'
               : 'border border-gray-200'
           }`}
           data-purpose="accordion-signatures"
@@ -888,7 +777,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
             className="w-full px-5 py-3.5 bg-gray-50/90 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-100/70 transition"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-7 h-7 rounded-lg bg-red-100 text-red-800 flex items-center justify-center text-xs font-bold">
+              <div className="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-xs font-bold">
                 3
               </div>
               <div className="text-left">
@@ -928,7 +817,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       <button
                         type="button"
                         onClick={() => onRequestUnlock('distributionList', 'Danh sách nơi nhận')}
-                        className="text-[11px] text-red-800 hover:text-red-900 font-semibold"
+                        className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
                       >
                         Mở khóa sửa
                       </button>
@@ -954,7 +843,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     className={`w-full text-xs rounded-lg font-sans ${
                       !unlockedFields.distributionList
                         ? 'bg-gray-100 border-gray-300 text-gray-700 cursor-not-allowed'
-                        : 'bg-white border-red-700 text-gray-900 ring-1 ring-red-200'
+                        : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
                     }`}
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
@@ -976,7 +865,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         <button
                           type="button"
                           onClick={() => onRequestUnlock('signerRole', 'Chức danh ký duyệt')}
-                          className="text-[11px] text-red-800 hover:text-red-900 font-semibold"
+                          className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
                         >
                           Mở khóa sửa
                         </button>
@@ -997,7 +886,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       className={`w-full text-xs rounded-lg font-bold ${
                         !unlockedFields.signerRole
                           ? 'bg-gray-100 border-gray-300 text-gray-800 cursor-not-allowed'
-                          : 'bg-white border-red-700 text-gray-900 ring-1 ring-red-200'
+                          : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
                       }`}
                     />
                   </div>
@@ -1014,7 +903,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         <button
                           type="button"
                           onClick={() => onRequestUnlock('signerName', 'Họ tên người ký')}
-                          className="text-[11px] text-red-800 hover:text-red-900 font-semibold"
+                          className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
                         >
                           Mở khóa sửa
                         </button>
@@ -1035,7 +924,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       className={`w-full text-xs rounded-lg font-bold ${
                         !unlockedFields.signerName
                           ? 'bg-gray-100 border-gray-300 text-gray-800 cursor-not-allowed'
-                          : 'bg-white border-red-700 text-gray-900 ring-1 ring-red-200'
+                          : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
                       }`}
                     />
                   </div>
@@ -1046,122 +935,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
         </div>
       </div>
 
-      {/* BEGIN: Sticky Bottom Action Bar */}
-      <footer className="bg-white border-t border-gray-200 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] shrink-0 z-20">
-        <div className="flex items-center space-x-2.5 text-xs text-gray-500 flex-wrap">
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
-            <span>Đã đồng bộ thời gian thực với bản in A4</span>
-          </div>
-          <span className="text-gray-300 hidden sm:inline">•</span>
-          <div className="flex items-center space-x-2 text-[11px] text-slate-500">
-            <button
-              type="button"
-              onClick={onOpenPrivacy}
-              className="hover:text-red-800 underline transition cursor-pointer"
-            >
-              Chính sách quyền riêng tư
-            </button>
-            <span className="text-gray-300">|</span>
-            <button
-              type="button"
-              onClick={onOpenTerms}
-              className="hover:text-red-800 underline transition cursor-pointer"
-            >
-              Điều khoản sử dụng
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2 sm:space-x-2.5 flex-wrap">
-          {/* Nút: Khôi phục mẫu gốc (Nút phụ viền xám) */}
-          <button
-            type="button"
-            onClick={onResetDefault}
-            className="px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition flex items-center space-x-1.5 shadow-2xs cursor-pointer"
-            title="Khôi phục lại mẫu chuẩn ban đầu của Trung tâm MSMV"
-          >
-            <i className="fa-solid fa-rotate text-gray-400"></i>
-            <span>Khôi phục mẫu gốc</span>
-          </button>
-
-          {/* Nút: 💾 Lưu dự thảo (Nút nền trắng viền xám nhẹ) */}
-          <button
-            type="button"
-            onClick={onSaveToDrive}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
-            title="Lưu bản dự thảo này vào Google Drive cá nhân"
-          >
-            <i className="fa-regular fa-floppy-disk text-red-700 text-sm"></i>
-            <span>💾 Lưu dự thảo</span>
-          </button>
-
-          {/* ============================================================== */}
-          {/* CỤM NÚT HÀNH ĐỘNG ĐIỀU HƯỚNG ĐỘNG (DYNAMIC PRIMARY ACTION)      */}
-          {/* ============================================================== */}
-
-          {/* Bước 1: Tiếp tục sang Bước 2 */}
-          {activeStep === 1 && (
-            <button
-              type="button"
-              onClick={() => handleGoToStep(2)}
-              className="px-4 py-2 text-xs font-bold text-white bg-red-800 hover:bg-red-900 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center space-x-2 cursor-pointer active:scale-95"
-              title="Chuyển sang Bước 2: Soạn thảo nội dung & Trợ lý AI"
-            >
-              <span>Tiếp tục: Soạn nội dung AI</span>
-              <i className="fa-solid fa-arrow-right text-xs"></i>
-            </button>
-          )}
-
-          {/* Bước 2: Nút phụ quay lại Bước 1 & Nút chính tiếp tục sang Bước 3 */}
-          {activeStep === 2 && (
-            <>
-              <button
-                type="button"
-                onClick={() => handleGoToStep(1)}
-                className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-all duration-300 flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
-                title="Quay lại Bước 1: Thể thức & Đơn vị"
-              >
-                <i className="fa-solid fa-arrow-left text-xs text-slate-500"></i>
-                <span>Quay lại Thể thức</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleGoToStep(3)}
-                className="px-4 py-2 text-xs font-bold text-white bg-red-800 hover:bg-red-900 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center space-x-2 cursor-pointer active:scale-95"
-                title="Chuyển sang Bước 3: Ký duyệt & Hoàn thiện"
-              >
-                <span>Tiếp tục: Ký duyệt &amp; Hoàn thiện</span>
-                <i className="fa-solid fa-arrow-right text-xs"></i>
-              </button>
-            </>
-          )}
-
-          {/* Bước 3: Nút phụ quay lại Bước 2 & Nút chính Xuất file Word (.docx) */}
-          {activeStep === 3 && (
-            <>
-              <button
-                type="button"
-                onClick={() => handleGoToStep(2)}
-                className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-all duration-300 flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
-                title="Quay lại Bước 2: Soạn thảo Công văn AI"
-              >
-                <i className="fa-solid fa-arrow-left text-xs text-slate-500"></i>
-                <span>Quay lại Soạn thảo</span>
-              </button>
-              <button
-                type="button"
-                onClick={onExportDocx || handleExportDocx}
-                className="px-4 py-2 text-xs font-bold text-white bg-red-800 hover:bg-red-900 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center space-x-2 cursor-pointer ring-2 ring-red-300 active:scale-95"
-                title="Tải file Word (.docx) để in theo chuẩn Nghị định 30/2020/NĐ-CP"
-              >
-                <i className="fa-solid fa-file-word text-sm"></i>
-                <span>Xuất file Word để in</span>
-              </button>
-            </>
-          )}
-        </div>
-      </footer>
+      
     </section>
   );
 };

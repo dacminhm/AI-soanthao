@@ -79,9 +79,18 @@ app.post('/api/ai/process-document', async (req: Request, res: Response): Promis
 
     let userPromptDirective = '';
     if (customInstruction && typeof customInstruction === 'string' && customInstruction.trim()) {
-      userPromptDirective = `Nhiệm vụ trọng tâm: ƯU TIÊN BÁM SÁT VÀ THỰC THI CHÍNH XÁC YÊU CẦU SAU CỦA NGƯỜI DÙNG:
+      userPromptDirective = `Nhiệm vụ trọng tâm: SOẠN THẢO, VIẾT LẠI VÀ CHUẨN HÓA ĐỒNG BỘ TOÀN DIỆN TOÀN BỘ CÔNG VĂN THEO NGHỊ ĐỊNH 30/2020/NĐ-CP.
+ƯU TIÊN TUYỆT ĐỐI BÁM SÁT VÀ THỰC THI CHÍNH XÁC YÊU CẦU SAU CỦA NGƯỜI DÙNG:
 "${customInstruction.trim()}"
-Đồng thời, luôn duy trì và chuẩn hóa toàn diện thể thức văn bản hành chính theo quy định tại Nghị định 30/2020/NĐ-CP của Chính phủ cho Trung tâm Mã số, mã vạch Quốc gia.`;
+
+CHỈ THỊ XỬ LÝ ĐỒNG BỘ TOÀN VĂN:
+1. Kính gửi (kinh_gui): Chuẩn hóa cơ quan/đơn vị hoặc cá nhân nhận phù hợp với bối cảnh nội dung.
+2. Trích yếu (trich_yeu): Chuẩn hóa câu tóm tắt nội dung công văn súc tích, chuyên nghiệp, bắt đầu bằng "V/v ...".
+3. Đoạn mở đầu (phan_mo_dau): Viết lại đoạn mở đầu nêu rõ lý do ban hành, bối cảnh xử lý hoặc dẫn chiếu công văn đến theo đúng mẫu hành chính.
+4. Thân bài (cac_y_kien_noi_dung): Soạn thảo chi tiết các điểm / điều khoản (1. Về..., 2. Về...), lập luận logic, gãy gọn, văn phong công vụ nhà nước, tích hợp các mốc thời gian, biện pháp, kinh phí hoặc số liệu nghiệp vụ theo yêu cầu.
+5. Đoạn kết luận (phan_ket_luan): Chuẩn hóa câu kết thúc trang trọng ("Trung tâm Mã số, mã vạch Quốc gia xin kính gửi... để tổng hợp và xử lý các công việc tiếp theo.\nTrân trọng./.").
+6. Căn cứ pháp lý (can_cu_phap_ly): Bổ sung danh sách các văn bản quy phạm pháp luật phù hợp nhất với chủ đề.
+7. Soát xét chính tả & logic: Phát hiện và đề xuất sửa lỗi ngữ pháp, chính tả tiếng Việt.`;
     } else if (mode === 'audit') {
       userPromptDirective = `Nhiệm vụ: SOÁT XÉT LOGIC, PHÁP LÝ VÀ CHỈNH SỬA LỖI VĂN PHONG HÀNH CHÍNH.
 Hãy kiểm tra chi tiết tính logic, thời hạn xử lý, tính nhất quán số liệu và tìm các từ ngữ khẩu ngữ/văn nói còn sót lại trong nội dung.
@@ -96,14 +105,14 @@ Chuẩn hóa trích yếu, đoạn mở đầu phúc đáp, phân tách các đi
 
     const fullPrompt = `${userPromptDirective}
 
-DỮ LIỆU ĐẦU VÀO HIỆN TẠI:
+DỮ LIỆU ĐẦU VÀO HIỆN TẠI CỦA CÔNG VĂN:
 - Trích yếu (V/v): ${subject || 'Chưa có trích yếu'}
-- Kính gửi: ${recipient}
-- Mở đầu: ${opening}
-- Nội dung các điểm / điều khoản:
-${content}
-- Đoạn kết luận: ${closing}
-${customInstruction ? `- Chỉ dẫn bổ sung của người dùng: "${customInstruction}"` : ''}
+- Kính gửi: ${recipient || 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia'}
+- Đoạn mở đầu: ${opening || 'Chưa có đoạn mở đầu'}
+- Nội dung các điểm / điều khoản hiện tại:
+${content || '(Chưa có nội dung, yêu cầu AI soạn thảo mới hoàn toàn)'}
+- Đoạn kết luận: ${closing || 'Chưa có đoạn kết luận'}
+${customInstruction ? `- YÊU CẦU CỤ THỂ CỦA NGƯỜI DÙNG: "${customInstruction}"` : ''}
 
 Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đối tượng JSON đúng cấu trúc.`;
 

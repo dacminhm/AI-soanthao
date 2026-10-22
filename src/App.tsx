@@ -521,7 +521,7 @@ export default function App() {
             onClick={() => setMobileSubTab('editor')}
             className={`flex-1 py-1 rounded text-xs font-semibold flex items-center justify-center space-x-1 transition ${
               mobileSubTab === 'editor'
-                ? 'bg-red-800 text-white shadow-2xs'
+                ? 'bg-slate-900 text-amber-400 shadow-2xs'
                 : 'bg-white text-slate-700'
             }`}
           >
@@ -533,7 +533,7 @@ export default function App() {
             onClick={() => setMobileSubTab('preview')}
             className={`flex-1 py-1 rounded text-xs font-semibold flex items-center justify-center space-x-1 transition ${
               mobileSubTab === 'preview'
-                ? 'bg-red-800 text-white shadow-2xs'
+                ? 'bg-slate-900 text-amber-400 shadow-2xs'
                 : 'bg-white text-slate-700'
             }`}
           >

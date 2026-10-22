@@ -52,7 +52,7 @@ export const UnlockWarningModal: React.FC<UnlockWarningModalProps> = ({
             <strong className="text-gray-800">(Trung tâm Mã số, mã vạch Quốc gia)</strong>.
           </p>
           <p className="text-xs text-gray-600 leading-relaxed">
-            Việc thay đổi trường <strong className="text-red-900 font-semibold">{fieldLabel}</strong> có thể làm sai lệch thể thức hành chính chuẩn hoặc ảnh hưởng đến quy cách ký duyệt.
+            Việc thay đổi trường <strong className="text-amber-900 font-semibold">{fieldLabel}</strong> có thể làm sai lệch thể thức hành chính chuẩn hoặc ảnh hưởng đến quy cách ký duyệt.
           </p>
           <p className="text-xs font-bold text-gray-900 pt-1">
             Bạn có chắc chắn muốn mở khóa để chỉnh sửa?
@@ -79,7 +79,7 @@ export const UnlockWarningModal: React.FC<UnlockWarningModalProps> = ({
           <button
             type="button"
             onClick={onConfirm}
-            className="w-1/2 py-2.5 px-4 bg-red-800 hover:bg-red-900 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg focus:outline-none transition flex items-center justify-center space-x-1.5"
+            className="w-1/2 py-2.5 px-4 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg focus:outline-none transition flex items-center justify-center space-x-1.5"
           >
             <i className="fa-solid fa-lock-open text-xs"></i>
             <span>Tôi hiểu, cho phép sửa</span>

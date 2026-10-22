@@ -40,7 +40,7 @@ export const A4Preview: React.FC<A4PreviewProps> = ({ document: doc }) => {
       <div className="h-11 bg-white/95 backdrop-blur-xs border-b border-gray-200 px-4 flex items-center justify-between text-xs text-gray-600 select-none shrink-0 shadow-2xs">
         <div className="flex items-center space-x-2">
           <span className="font-bold text-gray-800 flex items-center">
-            <i className="fa-solid fa-print text-red-800 mr-1.5"></i>
+            <i className="fa-solid fa-print text-slate-700 mr-1.5"></i>
             Xem trước bản in A4
           </span>
           <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 font-mono hidden xl:inline-block">
@@ -292,7 +292,7 @@ export const A4Preview: React.FC<A4PreviewProps> = ({ document: doc }) => {
 
                 {/* Simulated official stamp */}
                 <div className="h-20 flex items-center justify-center relative my-1">
-                  <div className="w-20 h-20 rounded-full border-2 border-red-500/35 flex items-center justify-center -rotate-12 text-[10px] text-red-600/45 font-bold uppercase select-none pointer-events-none">
+                  <div className="w-20 h-20 rounded-full border-2 border-amber-700/40 flex items-center justify-center -rotate-12 text-[10px] text-amber-800/50 font-bold uppercase select-none pointer-events-none">
                     (DẤU CƠ QUAN)
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export const A4Preview: React.FC<A4PreviewProps> = ({ document: doc }) => {
 
       {/* Preview Notice Footer */}
       <div className="p-2.5 bg-gray-50 border-t border-gray-200 text-center text-[11px] text-gray-500 flex items-center justify-center space-x-2 shrink-0">
-        <i className="fa-solid fa-shield-halved text-red-800"></i>
+        <i className="fa-solid fa-shield-halved text-amber-700"></i>
         <span>
           Trang in đạt chuẩn kỹ thuật trình bày theo Phụ lục I - Nghị định số 30/2020/NĐ-CP
         </span>

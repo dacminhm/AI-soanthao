@@ -113,7 +113,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
       <div className="shrink-0 bg-white px-4 sm:px-8 py-4 sm:py-5 shadow-xs border-b border-slate-200">
         <div className="max-w-[1720px] mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-800 to-red-950 text-white flex items-center justify-center shadow-md shadow-red-900/20 shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex items-center justify-center shadow-md border border-slate-700 shrink-0">
               <i className="fa-solid fa-folder-tree text-xl text-amber-300"></i>
             </div>
             <div className="space-y-1">
@@ -161,7 +161,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
             <button
               type="button"
               onClick={onNewDocument}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold text-white bg-red-800 hover:bg-red-900 shadow-sm transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 shadow-sm transition-all cursor-pointer"
             >
               <i className="fa-solid fa-plus text-xs"></i>
               <span>Soạn công văn mới</span>
@@ -182,7 +182,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 <path d="M73.55 76.8 87.3 52.85c-.8-1.35-1.9-2.5-3.2-3.3L70.3 25H43.65l26.7 46.25z" fill="#ffba00"></path>
               </svg>
               <span className="font-medium text-slate-600">Thư mục nguồn:</span>
-              <span className="font-bold text-red-900 bg-red-50 px-2 py-0.5 rounded text-[11px]">
+              <span className="font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded text-[11px]">
                 /AI Văn Bản - Dự thảo
               </span>
             </div>
@@ -205,7 +205,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
               href={folderLink || 'https://drive.google.com/drive/my-drive'}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-red-800 hover:text-red-950 font-bold inline-flex items-center gap-1 hover:underline"
+              className="text-amber-800 hover:text-amber-950 font-bold inline-flex items-center gap-1 hover:underline"
               title="Mở thư mục /AI Văn Bản - Dự thảo trên Google Drive"
             >
               <span>Xem trên web Google Drive</span>
@@ -232,7 +232,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                   </span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-red-50 text-red-800 flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center text-lg">
                 <i className="fa-solid fa-file-lines"></i>
               </div>
             </div>
@@ -284,7 +284,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 </div>
                 <div className="w-36 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
                   <div
-                    className="bg-red-800 h-full rounded-full transition-all"
+                    className="bg-amber-700 h-full rounded-full transition-all"
                     style={{ width: `${Math.min(totalCount * 1.5, 100)}%` }}
                   ></div>
                 </div>
@@ -332,13 +332,13 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 onClick={() => setActiveTab('all')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                   activeTab === 'all'
-                    ? 'bg-red-800 text-white shadow-2xs'
+                    ? 'bg-slate-900 text-amber-400 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <span>Tất cả</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === 'all' ? 'bg-red-950/40 text-white' : 'bg-slate-200 text-slate-700'
+                  activeTab === 'all' ? 'bg-slate-800 text-amber-300' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {totalCount}
                 </span>
@@ -349,13 +349,13 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 onClick={() => setActiveTab('congvan')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                   activeTab === 'congvan'
-                    ? 'bg-red-800 text-white shadow-2xs'
+                    ? 'bg-slate-900 text-amber-400 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <span>Công văn</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === 'congvan' ? 'bg-red-950/40 text-white' : 'bg-slate-200 text-slate-700'
+                  activeTab === 'congvan' ? 'bg-slate-800 text-amber-300' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {congvanCount}
                 </span>
@@ -366,13 +366,13 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 onClick={() => setActiveTab('totrinh')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                   activeTab === 'totrinh'
-                    ? 'bg-red-800 text-white shadow-2xs'
+                    ? 'bg-slate-900 text-amber-400 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <span>Tờ trình</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === 'totrinh' ? 'bg-red-950/40 text-white' : 'bg-slate-200 text-slate-700'
+                  activeTab === 'totrinh' ? 'bg-slate-800 text-amber-300' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {totrinhCount}
                 </span>
@@ -383,13 +383,13 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 onClick={() => setActiveTab('draft')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                   activeTab === 'draft'
-                    ? 'bg-red-800 text-white shadow-2xs'
+                    ? 'bg-slate-900 text-amber-400 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <span>Bản nháp chưa gửi</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === 'draft' ? 'bg-red-950/40 text-white' : 'bg-slate-200 text-slate-700'
+                  activeTab === 'draft' ? 'bg-slate-800 text-amber-300' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {draftCount}
                 </span>
@@ -400,13 +400,13 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                 onClick={() => setActiveTab('word')}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                   activeTab === 'word'
-                    ? 'bg-red-800 text-white shadow-2xs'
+                    ? 'bg-slate-900 text-amber-400 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <span>Đã xuất file Word</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === 'word' ? 'bg-red-950/40 text-white' : 'bg-slate-200 text-slate-700'
+                  activeTab === 'word' ? 'bg-slate-800 text-amber-300' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {wordCount}
                 </span>
@@ -439,7 +439,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                           <button
                             type="button"
                             onClick={() => setInspectDraft(item)}
-                            className="font-bold text-slate-900 group-hover:text-red-900 transition text-sm leading-snug line-clamp-1 text-left cursor-pointer"
+                            className="font-bold text-slate-900 group-hover:text-amber-800 transition text-sm leading-snug line-clamp-1 text-left cursor-pointer"
                           >
                             {item.title}
                           </button>
@@ -455,7 +455,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold ${
                               item.category === 'congvan'
-                                ? 'bg-red-50 text-red-800'
+                                ? 'bg-amber-50 text-amber-800'
                                 : item.category === 'totrinh'
                                 ? 'bg-amber-50 text-amber-800'
                                 : 'bg-blue-50 text-blue-800'
@@ -483,7 +483,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                             <button
                               type="button"
                               onClick={() => onOpenDraft(item)}
-                              className="p-2 rounded-lg text-slate-600 hover:text-red-900 hover:bg-red-50 transition cursor-pointer"
+                              className="p-2 rounded-lg text-slate-600 hover:text-amber-800 hover:bg-amber-50 transition cursor-pointer"
                               title="Mở chỉnh sửa trong Editor"
                             >
                               <i className="fa-solid fa-pen-to-square text-sm"></i>
@@ -513,7 +513,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                                   onNotify('Đã xóa dự thảo thành công.');
                                 }
                               }}
-                              className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                              className="p-2 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition cursor-pointer"
                               title="Xóa dự thảo"
                             >
                               <i className="fa-regular fa-trash-can text-sm"></i>
@@ -553,7 +553,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                   <button
                     type="button"
                     onClick={onNewDocument}
-                    className="px-5 py-2.5 bg-red-800 text-white rounded-lg text-xs font-bold hover:bg-red-900 inline-flex items-center gap-2 cursor-pointer shadow-sm transition"
+                    className="px-5 py-2.5 bg-amber-700 text-white rounded-lg text-xs font-bold hover:bg-amber-800 inline-flex items-center gap-2 cursor-pointer shadow-sm transition"
                   >
                     <i className="fa-solid fa-plus text-xs"></i>
                     <span>+ Soạn công văn mới</span>
@@ -598,7 +598,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                   <button
                     type="button"
                     onClick={onOpenPrivacy}
-                    className="hover:text-red-800 underline transition cursor-pointer"
+                    className="hover:text-amber-800 underline transition cursor-pointer"
                   >
                     Chính sách quyền riêng tư
                   </button>
@@ -606,7 +606,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                   <button
                     type="button"
                     onClick={onOpenTerms}
-                    className="hover:text-red-800 underline transition cursor-pointer"
+                    className="hover:text-amber-800 underline transition cursor-pointer"
                   >
                     Điều khoản sử dụng
                   </button>
@@ -618,7 +618,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                   >
                     <i className="fa-solid fa-chevron-left text-[11px]"></i>
                   </button>
-                  <button className="w-8 h-8 rounded-lg bg-red-800 text-white font-bold flex items-center justify-center shadow-2xs">
+                  <button className="w-8 h-8 rounded-lg bg-slate-900 text-amber-400 font-bold flex items-center justify-center shadow-2xs">
                     1
                   </button>
                   <button className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold flex items-center justify-center transition">
@@ -666,7 +666,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
               <div className="grid grid-cols-2 gap-4 pt-1">
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <span className="text-[11px] text-slate-500 font-medium">Số &amp; Ký hiệu</span>
-                  <div className="text-xs font-bold text-red-900 mt-0.5">
+                  <div className="text-xs font-bold text-amber-900 mt-0.5">
                     Số: {inspectDraft.docNumber}{inspectDraft.docSymbol}
                   </div>
                 </div>
@@ -698,7 +698,7 @@ export const DriveArchiveView: React.FC<DriveArchiveViewProps> = ({
                   onOpenDraft(inspectDraft);
                   setInspectDraft(null);
                 }}
-                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-red-800 hover:bg-red-900 transition flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 transition flex items-center gap-1.5"
               >
                 <i className="fa-solid fa-pen-nib text-xs"></i>
                 <span>Mở trình soạn thảo</span>

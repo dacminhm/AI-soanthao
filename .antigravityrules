@@ -1,0 +1,3 @@
+# QUY TẮC DỰ ÁN AI SOẠN THẢO VĂN BẢN
+- Không tự ý tái cấu trúc hoặc sửa đổi `src/services/driveService.ts` và `server.ts` trừ khi có yêu cầu cụ thể.
+- Giữ nguyên thể thức chuẩn Nghị định 30/2020/NĐ-CP và cơ chế xuất docx hiện tại.

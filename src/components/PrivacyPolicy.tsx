@@ -43,11 +43,11 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
       {/* Mục 1 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">1</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">1</span>
           Mục đích thu thập & Quyền truy cập Google Drive
         </h3>
         <p>
-          Ứng dụng chỉ yêu cầu quyền truy cập Google Drive có phạm vi hạn chế nhất (scope: <code className="bg-slate-100 text-red-900 px-1.5 py-0.5 rounded text-xs font-mono">https://www.googleapis.com/auth/drive.file</code>) nhằm mục đích duy nhất:
+          Ứng dụng chỉ yêu cầu quyền truy cập Google Drive có phạm vi hạn chế nhất (scope: <code className="bg-slate-100 text-amber-900 px-1.5 py-0.5 rounded text-xs font-mono">https://www.googleapis.com/auth/drive.file</code>) nhằm mục đích duy nhất:
         </p>
         <ul className="list-disc list-inside space-y-1 text-slate-600 pl-2 text-xs">
           <li>Tạo một thư mục chuyên dụng mang tên <strong>&quot;AI Văn Bản - Dự thảo&quot;</strong> trong Google Drive của chính tài khoản người dùng đăng nhập.</li>
@@ -59,7 +59,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
       {/* Mục 2 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">2</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">2</span>
           Quyền riêng tư & Bảo mật dữ liệu người dùng
         </h3>
         <p>
@@ -76,7 +76,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
       {/* Mục 3 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">3</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">3</span>
           Sử dụng Dữ liệu & Xử lý Trí tuệ Nhân tạo (Google Gemini AI)
         </h3>
         <p>
@@ -91,7 +91,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
       {/* Mục 4 */}
       <section className="space-y-2">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">4</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">4</span>
           Quyền của người dùng & Xóa dữ liệu
         </h3>
         <p className="text-xs text-slate-600">
@@ -99,20 +99,20 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
         </p>
         <ul className="list-disc list-inside space-y-1 text-slate-600 pl-2 text-xs">
           <li>Bạn có thể xóa bất kỳ dự thảo nào trực tiếp từ màn hình &quot;Kho lưu trữ dự thảo&quot; của ứng dụng. Khi bạn xác nhận xóa, ứng dụng sẽ gửi yêu cầu DELETE đến Google Drive API để gỡ bỏ tệp tương ứng.</li>
-          <li>Bạn có thể hủy quyền truy cập của ứng dụng bất cứ lúc nào tại trang quản lý tài khoản Google của bạn (<a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-red-800 underline">Google Account Permissions</a>).</li>
+          <li>Bạn có thể hủy quyền truy cập của ứng dụng bất cứ lúc nào tại trang quản lý tài khoản Google của bạn (<a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-amber-800 underline">Google Account Permissions</a>).</li>
         </ul>
       </section>
 
       {/* Mục 5 */}
       <section className="space-y-2 border-t border-slate-200 pt-4">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-red-100 text-red-900 text-xs flex items-center justify-center font-bold">5</span>
+          <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center font-bold">5</span>
           Thông tin liên hệ & Đơn vị chủ quản
         </h3>
         <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1 text-slate-600">
           <p><strong>Đơn vị:</strong> TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA (Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia)</p>
           <p><strong>Địa chỉ:</strong> Số 8 Hoàng Quốc Việt, Phường Nghĩa Đô, Quận Cầu Giấy, TP. Hà Nội, Việt Nam</p>
-          <p><strong>Email đầu mối hỗ trợ / Phụ trách kỹ thuật:</strong> <a href="mailto:dacminhm@gmail.com" className="text-red-800 font-semibold underline">dacminhm@gmail.com</a></p>
+          <p><strong>Email đầu mối hỗ trợ / Phụ trách kỹ thuật:</strong> <a href="mailto:dacminhm@gmail.com" className="text-amber-800 font-semibold underline">dacminhm@gmail.com</a></p>
           <p><strong>Cơ sở pháp lý văn bản:</strong> Nghị định số 30/2020/NĐ-CP ngày 05/03/2020 của Chính phủ về công tác văn thư.</p>
         </div>
       </section>
@@ -128,7 +128,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 bg-red-800 hover:bg-red-900 text-white text-xs font-bold rounded-lg transition shadow-sm cursor-pointer"
+              className="px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-lg transition shadow-sm cursor-pointer"
             >
               Quay lại ứng dụng
             </button>
@@ -152,7 +152,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
         {/* Modal Top Bar */}
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0 rounded-t-2xl">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-red-800 text-white flex items-center justify-center text-sm shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-sm shadow-xs border border-slate-700">
               <i className="fa-solid fa-shield-halved"></i>
             </div>
             <div>

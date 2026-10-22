@@ -83,9 +83,9 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-red-50 to-white border-b border-gray-200 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 bg-gradient-to-r from-slate-100 to-white border-b border-gray-200 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-red-100 border border-red-200 text-red-800 flex items-center justify-center text-lg shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 text-amber-400 flex items-center justify-center text-lg shadow-2xs">
               <i className="fa-solid fa-gear"></i>
             </div>
             <div>
@@ -93,7 +93,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                 <h3 className="text-base font-bold text-gray-900 uppercase tracking-tight">
                   QUẢN TRỊ MẪU LOẠI HÌNH VĂN BẢN
                 </h3>
-                <span className="bg-red-50 text-red-800 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-semibold px-2 py-0.5 rounded-full">
                   (Chỉ dành cho dacminhm@gmail.com)
                 </span>
               </div>
@@ -122,7 +122,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm kiếm loại mẫu..."
-                  className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border-gray-300 focus:border-red-600 focus:ring-1 focus:ring-red-200 bg-white"
+                  className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border-gray-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-200 bg-white"
                 />
                 <i className="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-gray-400"></i>
               </div>
@@ -140,14 +140,14 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                       onClick={() => setSelectedTemplateId(tmpl.id)}
                       className={`p-3 rounded-xl cursor-pointer transition shadow-2xs ${
                         isSelected
-                          ? 'bg-red-50/80 border-2 border-red-700/60 shadow-xs'
+                          ? 'bg-amber-50/80 border-2 border-amber-600/60 shadow-xs'
                           : 'bg-white border border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span
                           className={`text-xs font-bold ${
-                            isSelected ? 'text-red-900' : 'text-gray-800'
+                            isSelected ? 'text-amber-900' : 'text-gray-800'
                           }`}
                         >
                           {tmpl.name}
@@ -174,7 +174,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
             <button
               type="button"
               onClick={handleCreateNewTemplate}
-              className="mt-4 w-full py-2.5 px-3 border-2 border-dashed border-red-200 hover:border-red-600 bg-white hover:bg-red-50 text-red-800 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition"
+              className="mt-4 w-full py-2.5 px-3 border-2 border-dashed border-amber-200 hover:border-amber-600 bg-white hover:bg-amber-50 text-amber-800 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition"
             >
               <i className="fa-solid fa-plus text-xs"></i>
               <span>Thêm loại hình văn bản mới</span>
@@ -185,7 +185,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
           <div className="col-span-12 md:col-span-8 p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-5 bg-white">
             <div className="flex items-center justify-between pb-3 border-b border-gray-200">
               <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-800"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-700"></span>
                 <h4 className="text-sm font-bold text-gray-900 uppercase tracking-tight">
                   Cấu hình chi tiết: Mẫu văn bản {currentTemplate.name}
                 </h4>
@@ -199,24 +199,24 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Tên loại văn bản <span className="text-red-600">*</span>
+                  Tên loại văn bản <span className="text-amber-600">*</span>
                 </label>
                 <input
                   type="text"
                   value={currentTemplate.name}
                   onChange={(e) => handleUpdateCurrent('name', e.target.value)}
-                  className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 focus:ring-red-200 font-semibold"
+                  className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 focus:ring-amber-200 font-semibold"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Mã viết tắt ký hiệu <span className="text-red-600">*</span>
+                  Mã viết tắt ký hiệu <span className="text-amber-600">*</span>
                 </label>
                 <input
                   type="text"
                   value={currentTemplate.code}
                   onChange={(e) => handleUpdateCurrent('code', e.target.value)}
-                  className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 focus:ring-red-200 font-semibold"
+                  className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 focus:ring-amber-200 font-semibold"
                 />
               </div>
             </div>
@@ -225,9 +225,9 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
             <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-800 uppercase flex items-center gap-1.5">
-                  <i className="fa-solid fa-table-columns text-red-800"></i> 1. Cấu trúc Header mặc định
+                  <i className="fa-solid fa-table-columns text-amber-700"></i> 1. Cấu trúc Header mặc định
                 </span>
-                <span className="text-[11px] font-bold text-red-800 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                   Tỷ lệ {currentTemplate.headerRatio}
                 </span>
               </div>
@@ -240,7 +240,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                     type="text"
                     value={currentTemplate.parentAgency}
                     onChange={(e) => handleUpdateCurrent('parentAgency', e.target.value)}
-                    className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 bg-white"
+                    className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 bg-white"
                   />
                 </div>
                 <div>
@@ -251,7 +251,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                     type="text"
                     value={currentTemplate.issuingAgency}
                     onChange={(e) => handleUpdateCurrent('issuingAgency', e.target.value)}
-                    className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 bg-white font-bold"
+                    className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 bg-white font-bold"
                   />
                 </div>
               </div>
@@ -260,7 +260,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
             {/* Block 2: Body */}
             <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
               <span className="text-xs font-bold text-gray-800 uppercase flex items-center gap-1.5">
-                <i className="fa-solid fa-align-left text-red-800"></i> 2. Cấu trúc Thân văn bản mặc định
+                <i className="fa-solid fa-align-left text-amber-700"></i> 2. Cấu trúc Thân văn bản mặc định
               </span>
 
               <div>
@@ -271,7 +271,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                   rows={2}
                   value={currentTemplate.defaultOpening}
                   onChange={(e) => handleUpdateCurrent('defaultOpening', e.target.value)}
-                  className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 bg-white"
+                  className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 bg-white"
                 />
               </div>
 
@@ -284,7 +284,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsAddingNew(true)}
-                    className="text-[11px] font-semibold text-red-800 hover:text-red-900 flex items-center gap-1"
+                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1"
                   >
                     <i className="fa-solid fa-plus text-[10px]"></i> Thêm căn cứ
                   </button>
@@ -300,7 +300,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveLegalBase(idx)}
-                        className="text-gray-400 hover:text-red-600 ml-1"
+                        className="text-gray-400 hover:text-amber-600 ml-1"
                         title="Xóa căn cứ này"
                       >
                         <i className="fa-solid fa-xmark text-[11px]"></i>
@@ -322,7 +322,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                     <button
                       type="button"
                       onClick={handleAddLegalBase}
-                      className="px-3 py-1.5 bg-red-800 text-white text-xs font-bold rounded-lg hover:bg-red-900"
+                      className="px-3 py-1.5 bg-amber-700 text-white text-xs font-bold rounded-lg hover:bg-amber-800"
                     >
                       Lưu
                     </button>
@@ -345,7 +345,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                   rows={2}
                   value={currentTemplate.defaultClosing}
                   onChange={(e) => handleUpdateCurrent('defaultClosing', e.target.value)}
-                  className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 bg-white"
+                  className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 bg-white"
                 />
               </div>
             </div>
@@ -353,7 +353,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
             {/* Block 3: Footer */}
             <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
               <span className="text-xs font-bold text-gray-800 uppercase flex items-center gap-1.5">
-                <i className="fa-solid fa-signature text-red-800"></i> 3. Cấu trúc Footer mặc định
+                <i className="fa-solid fa-signature text-amber-700"></i> 3. Cấu trúc Footer mặc định
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -370,7 +370,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                         e.target.value.split('\n').filter((l) => l.trim().length > 0)
                       )
                     }
-                    className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 bg-white"
+                    className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 bg-white"
                   />
                 </div>
                 <div>
@@ -380,7 +380,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
                   <select
                     value={currentTemplate.defaultSignerRole}
                     onChange={(e) => handleUpdateCurrent('defaultSignerRole', e.target.value)}
-                    className="w-full text-xs rounded-lg border-gray-300 focus:border-red-600 bg-white font-bold"
+                    className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 bg-white font-bold"
                   >
                     <option value="GIÁM ĐỐC">GIÁM ĐỐC</option>
                     <option value="PHÓ GIÁM ĐỐC">PHÓ GIÁM ĐỐC</option>
@@ -396,7 +396,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
         {/* Modal Footer */}
         <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <i className="fa-solid fa-lock text-red-800"></i>
+            <i className="fa-solid fa-lock text-amber-700"></i>
             <span>
               Phiên bảo mật: Chỉ khả dụng với tài khoản Quản trị viên{' '}
               <strong className="text-gray-800">dacminhm@gmail.com</strong>
@@ -413,7 +413,7 @@ export const AdminTemplateModal: React.FC<AdminTemplateModalProps> = ({
             <button
               type="button"
               onClick={handleSaveAndActivate}
-              className="px-4 py-2 text-xs font-bold text-white bg-red-800 hover:bg-red-900 rounded-lg shadow-sm hover:shadow-md transition flex items-center space-x-1.5"
+              className="px-4 py-2 text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 rounded-lg shadow-sm hover:shadow-md transition flex items-center space-x-1.5"
             >
               <i className="fa-regular fa-floppy-disk text-xs"></i>
               <span>Lưu &amp; Kích hoạt mẫu này</span>

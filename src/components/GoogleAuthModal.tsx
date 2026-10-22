@@ -300,13 +300,13 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                 <img
                   src={currentUser.picture}
                   alt={currentUser.name}
-                  className="w-10 h-10 rounded-full object-cover ring-2 ring-red-100 shrink-0"
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-300 shrink-0"
                   onError={(e) => {
                     (e.currentTarget as HTMLElement).style.display = 'none';
                   }}
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-red-800 text-white font-bold flex items-center justify-center text-sm ring-2 ring-red-100 shrink-0">
+                <div className="w-10 h-10 rounded-full bg-slate-900 text-amber-400 font-bold flex items-center justify-center text-sm ring-2 ring-slate-300 shrink-0">
                   {currentUser.name.charAt(0)}
                 </div>
               )}
@@ -318,7 +318,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                   <span
                     className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider shrink-0 ${
                       currentUser.isAdmin
-                        ? 'bg-red-100 text-red-800 border border-red-200'
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
                         : 'bg-blue-100 text-blue-800 border border-blue-200'
                     }`}
                   >
@@ -333,7 +333,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
             <button
               type="button"
               onClick={handleLogout}
-              className="text-xs font-semibold text-red-600 hover:text-red-800 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer shrink-0 ml-2"
+              className="text-xs font-semibold text-amber-700 hover:text-amber-800 px-2.5 py-1.5 rounded-lg hover:bg-amber-50 transition cursor-pointer shrink-0 ml-2"
             >
               <i className="fa-solid fa-arrow-right-from-bracket mr-1"></i>
               Đăng xuất
@@ -343,8 +343,8 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
 
         {/* Báo lỗi nếu có */}
         {error && (
-          <div className="my-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start space-x-2">
-            <i className="fa-solid fa-circle-exclamation text-red-500 mt-0.5 shrink-0"></i>
+          <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start space-x-2">
+            <i className="fa-solid fa-circle-exclamation text-amber-600 mt-0.5 shrink-0"></i>
             <span className="leading-relaxed">{error}</span>
           </div>
         )}
@@ -407,7 +407,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                 onClose();
                 onOpenPrivacy?.();
               }}
-              className="hover:text-red-800 underline transition cursor-pointer"
+              className="hover:text-amber-800 underline transition cursor-pointer"
             >
               Chính sách quyền riêng tư
             </button>
@@ -418,7 +418,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                 onClose();
                 onOpenTerms?.();
               }}
-              className="hover:text-red-800 underline transition cursor-pointer"
+              className="hover:text-amber-800 underline transition cursor-pointer"
             >
               Điều khoản sử dụng
             </button>
