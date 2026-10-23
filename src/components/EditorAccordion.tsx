@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DocumentState, formatSubject } from '../utils/decree30Rules.ts';
+import { DocumentState, formatSubject, DEFAULT_PHIEU_TRINH_ATTACHMENTS } from '../utils/decree30Rules.ts';
 import { generateDecree30Docx, downloadBlob } from '../utils/docxExport.ts';
 
 interface EditorAccordionProps {
@@ -543,7 +543,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                             onUpdateField('docSymbol', '/PTr-MSMV');
                           }
                           if (!doc.recipient || doc.recipient === 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia') {
-                            onUpdateField('recipient', 'Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia');
+                            onUpdateField('recipient', 'Lãnh đạo Trung tâm');
                           }
                           if (!doc.opening || doc.opening.includes('Phúc đáp công văn số')) {
                             onUpdateField('opening', 'Kính gửi: Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia');
@@ -553,6 +553,9 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                           }
                           if (!doc.departmentHeadName) {
                             onUpdateField('departmentHeadName', 'Nguyễn Đắc Minh');
+                          }
+                          if (!doc.attachedDocuments || doc.attachedDocuments.length === 0) {
+                            onUpdateField('attachedDocuments', [...DEFAULT_PHIEU_TRINH_ATTACHMENTS]);
                           }
                           if (!doc.content || doc.content.includes('nâng cấp máy chủ cơ sở dữ liệu')) {
                             const defaultPT = `1. Tóm tắt nội dung công việc:\nThực hiện chỉ đạo của Lãnh đạo Trung tâm tại ...\n- Về tiến độ thực hiện: ...\n- Về các công việc đã thực hiện: ...\n- Kết quả đạt được: ...\n\n2. Ý kiến của các đơn vị liên quan:\nNội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan.\n\n3. Ý kiến của đơn vị trình:\na) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]\nb) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]\nPhòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`;
@@ -582,38 +585,185 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                 </div>
               </div>
 
-              {/* Row 3: Trích yếu & Kính gửi */}
-              <div className="space-y-3 pt-1 border-t border-gray-100">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    {isPhieuTrinh
-                      ? 'Vấn đề trình (Nội dung trình Lãnh đạo Trung tâm giải quyết)'
-                      : 'Trích yếu nội dung (V/v) - Cỡ 12, chữ đứng, căn giữa, cách dòng single (0, 0)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={doc.subject}
-                    onChange={(e) => onUpdateField('subject', e.target.value)}
-                    placeholder={
-                      isPhieuTrinh
-                        ? 'Nhập vấn đề trình (VD: Phê duyệt phương án thẩm định và ban hành văn bản hướng dẫn)...'
-                        : 'V/v ...'
-                    }
-                    className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600 font-normal text-center"
-                  />
+              {/* Row 3: Các trường nội dung đầu văn bản (Kính gửi, Vấn đề trình, Tài liệu kèm theo) */}
+              {isPhieuTrinh ? (
+                /* ======================================================== */
+                /* THỨ TỰ NHẬP LIỆU PHIẾU TRÌNH CHUẨN KHỚP BẢN IN A4         */
+                /* ======================================================== */
+                <div className="space-y-4 pt-2 border-t border-gray-100">
+                  {/* VỊ TRÍ 1: Kính gửi */}
+                  <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-slate-800 flex items-center">
+                        <i className="fa-solid fa-envelope-open-text text-amber-700 mr-1.5"></i>
+                        1. Kính gửi (Cỡ 13-14, chữ đứng, căn giữa dưới tiêu đề Phiếu trình)
+                      </label>
+                      <span className="text-[10px] text-amber-800 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        Mặc định: Lãnh đạo Trung tâm
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={doc.recipient || ''}
+                      onChange={(e) => onUpdateField('recipient', e.target.value)}
+                      placeholder="Lãnh đạo Trung tâm"
+                      className="w-full text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 font-semibold px-3 py-2 bg-white text-slate-800 shadow-2xs"
+                    />
+                  </div>
+
+                  {/* VỊ TRÍ 2: Vấn đề trình */}
+                  <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-slate-800 flex items-center">
+                        <i className="fa-solid fa-file-pen text-amber-700 mr-1.5"></i>
+                        2. Vấn đề trình (Nội dung trình Lãnh đạo Trung tâm giải quyết)
+                      </label>
+                      <span className="text-[10px] text-slate-500 italic">
+                        Thụt đầu dòng 1.27cm trên bản in
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={doc.subject}
+                      onChange={(e) => onUpdateField('subject', e.target.value)}
+                      placeholder="Nhập vấn đề trình (VD: Phê duyệt phương án thẩm định và ban hành văn bản hướng dẫn)..."
+                      className="w-full text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 font-normal px-3 py-2 bg-white text-slate-800 shadow-2xs resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* VỊ TRÍ 3: Tài liệu kèm theo */}
+                  <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 flex items-center">
+                        <i className="fa-solid fa-paperclip text-amber-700 mr-1.5"></i>
+                        3. Tài liệu kèm theo (Mỗi dòng 1 tài liệu)
+                      </label>
+                      <div className="flex items-center space-x-1.5">
+                        {/* Toggle mode: list vs textarea */}
+                        <div className="flex items-center bg-slate-200/80 p-0.5 rounded-lg border border-slate-300 text-[10px]">
+                          <button
+                            type="button"
+                            onClick={() => setAttachedViewMode('list')}
+                            className={`px-2 py-0.5 rounded font-semibold transition cursor-pointer ${
+                              attachedViewMode === 'list'
+                                ? 'bg-white text-slate-900 shadow-2xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <i className="fa-solid fa-list-ul mr-1"></i> Từng mục
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAttachedViewMode('text')}
+                            className={`px-2 py-0.5 rounded font-semibold transition cursor-pointer ${
+                              attachedViewMode === 'text'
+                                ? 'bg-white text-slate-900 shadow-2xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <i className="fa-solid fa-align-left mr-1"></i> Soạn nhiều dòng
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleResetAttachedDocs}
+                          className="text-[11px] text-slate-500 hover:text-slate-800 font-medium px-1.5 py-0.5 rounded hover:bg-slate-200/50 transition cursor-pointer"
+                          title="Khôi phục 4 mục tài liệu mẫu ban đầu"
+                        >
+                          Khôi phục mẫu
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleAddAttachedDoc}
+                          className="inline-flex items-center text-[11px] font-semibold text-white bg-slate-900 hover:bg-slate-800 px-2 py-1 rounded-lg shadow-2xs transition cursor-pointer"
+                        >
+                          <i className="fa-solid fa-plus text-[10px] mr-1 text-amber-400"></i>
+                          Thêm tài liệu
+                        </button>
+                      </div>
+                    </div>
+
+                    {attachedViewMode === 'list' ? (
+                      /* Dynamic List Mode */
+                      <div className="space-y-1.5">
+                        {attachedDocs.map((item, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <span className="text-slate-400 font-bold text-xs select-none pl-1 w-3 text-center">-</span>
+                            <input
+                              type="text"
+                              value={item}
+                              onChange={(e) => handleUpdateAttachedDoc(idx, e.target.value)}
+                              onPaste={(e) => handlePasteAttachedDoc(idx, e)}
+                              placeholder={`Tài liệu ${idx + 1}...`}
+                              className="flex-1 text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 px-2.5 py-1.5 bg-white text-slate-800 shadow-2xs"
+                            />
+                            {attachedDocs.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAttachedDoc(idx)}
+                                className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                                title="Xóa dòng tài liệu này"
+                              >
+                                <i className="fa-solid fa-xmark text-xs"></i>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      /* Textarea Mode */
+                      <div>
+                        <textarea
+                          rows={4}
+                          value={attachedDocs.join('\n')}
+                          onChange={(e) => handleTextareaAttachedChange(e.target.value)}
+                          placeholder="Nhập mỗi tài liệu trên một dòng..."
+                          className="w-full text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 font-normal px-3 py-2 bg-white text-slate-800 shadow-2xs leading-relaxed custom-scrollbar"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                      <span className="italic flex items-center">
+                        <i className="fa-solid fa-wand-magic-sparkles text-amber-600 mr-1"></i>
+                        Tự động thêm dấu chấm phẩy (;) ở các dòng giữa và dấu chấm (.) ở dòng cuối khi in / xuất Word.
+                      </span>
+                      <span className="font-mono text-slate-400">
+                        {attachedDocs.filter((s) => s.trim().length > 0).length} tài liệu
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Kính gửi cơ quan, đơn vị nhận chính
-                  </label>
-                  <input
-                    type="text"
-                    value={doc.recipient}
-                    onChange={(e) => onUpdateField('recipient', e.target.value)}
-                    className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600"
-                  />
+              ) : (
+                /* BỐ CỤC CÔNG VĂN ĐI NGHỊ ĐỊNH 30 */
+                <div className="space-y-3 pt-1 border-t border-gray-100">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Trích yếu nội dung (V/v) - Cỡ 12, chữ đứng, căn giữa, cách dòng single (0, 0)
+                    </label>
+                    <input
+                      type="text"
+                      value={doc.subject}
+                      onChange={(e) => onUpdateField('subject', e.target.value)}
+                      placeholder="V/v ..."
+                      className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600 font-normal text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Kính gửi cơ quan, đơn vị nhận chính
+                    </label>
+                    <input
+                      type="text"
+                      value={doc.recipient}
+                      onChange={(e) => onUpdateField('recipient', e.target.value)}
+                      className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

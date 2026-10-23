@@ -13,6 +13,7 @@ export interface AdministrativeTemplate {
   distributionList: string[];
   defaultSignerRole: string;
   defaultContent?: string;
+  attachedDocuments?: string[];
 }
 
 export interface StoredDraft {
@@ -40,6 +41,7 @@ export interface StoredDraft {
   issuingAgency?: string;
   placeDate?: string;
   webViewLink?: string;
+  attachedDocuments?: string[];
 }
 
 export const INITIAL_TEMPLATES: AdministrativeTemplate[] = [
@@ -84,6 +86,12 @@ export const INITIAL_TEMPLATES: AdministrativeTemplate[] = [
     defaultClosing: 'Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.',
     distributionList: ['- Lãnh đạo Trung tâm (để b/c và chỉ đạo);', '- Lưu: VT, KHTC.'],
     defaultSignerRole: 'TRƯỞNG PHÒNG KẾ HOẠCH TÀI CHÍNH',
+    attachedDocuments: [
+      'Dự thảo Công văn',
+      'Công văn đến số ....',
+      'Quyết định số ......',
+      'Tài liệu khác',
+    ],
     defaultContent: `1. Tóm tắt nội dung công việc:
 Thực hiện chỉ đạo của Lãnh đạo Trung tâm tại ...
 - Về tiến độ thực hiện: ...

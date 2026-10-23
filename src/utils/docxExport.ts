@@ -235,12 +235,18 @@ async function generatePhieuTrinhDocx(doc: DocumentState): Promise<Blob> {
     ],
   });
 
+  const phieuTrinhRecipient = doc.recipient?.trim()
+    ? (doc.recipient.trim().toLowerCase().startsWith('kính gửi')
+        ? doc.recipient.trim()
+        : `Kính gửi: ${doc.recipient.trim()}`)
+    : 'Kính gửi: Lãnh đạo Trung tâm';
+
   const title2 = new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 180, line: 260 },
     children: [
       new TextRun({
-        text: 'Kính gửi: Lãnh đạo Trung tâm',
+        text: phieuTrinhRecipient,
         font: FONT_FAMILY,
         bold: false,
         size: 26, // 13pt
@@ -284,32 +290,21 @@ async function generatePhieuTrinhDocx(doc: DocumentState): Promise<Blob> {
     ],
   });
 
-  const tailieu1 = new Paragraph({
-    alignment: AlignmentType.LEFT,
-    indent: { left: 1080 },
-    spacing: { after: 30, line: 240 },
-    children: [new TextRun({ text: '- Dự thảo Công văn;', font: FONT_FAMILY, size: 26 })],
-  });
-
-  const tailieu2 = new Paragraph({
-    alignment: AlignmentType.LEFT,
-    indent: { left: 1080 },
-    spacing: { after: 30, line: 240 },
-    children: [new TextRun({ text: '- Công văn đến số ....;', font: FONT_FAMILY, size: 26 })],
-  });
-
-  const tailieu3 = new Paragraph({
-    alignment: AlignmentType.LEFT,
-    indent: { left: 1080 },
-    spacing: { after: 30, line: 240 },
-    children: [new TextRun({ text: '- Quyết định số ......;', font: FONT_FAMILY, size: 26 })],
-  });
-
-  const tailieu4 = new Paragraph({
-    alignment: AlignmentType.LEFT,
-    indent: { left: 1080 },
-    spacing: { after: 120, line: 240 },
-    children: [new TextRun({ text: '- Tài liệu khác.', font: FONT_FAMILY, size: 26 })],
+  const formattedAttachedDocs = formatAttachedDocuments(doc.attachedDocuments);
+  const tailieuParagraphs: Paragraph[] = formattedAttachedDocs.map((item, idx) => {
+    const isLast = idx === formattedAttachedDocs.length - 1;
+    return new Paragraph({
+      alignment: AlignmentType.LEFT,
+      indent: { left: 1080 },
+      spacing: { after: isLast ? 120 : 30, line: 240 },
+      children: [
+        new TextRun({
+          text: item,
+          font: FONT_FAMILY,
+          size: 26,
+        }),
+      ],
+    });
   });
 
   // Khung bút phê Lãnh đạo: border hình chữ nhật
@@ -649,10 +644,7 @@ async function generatePhieuTrinhDocx(doc: DocumentState): Promise<Blob> {
           title2,
           vandeTrinhPara,
           tailieuHeader,
-          tailieu1,
-          tailieu2,
-          tailieu3,
-          tailieu4,
+          ...tailieuParagraphs,
           approvalBoxTable,
           ...bodyContentParagraphs,
           signersTable,

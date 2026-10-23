@@ -300,6 +300,7 @@ export default function App() {
         signerName: document.signerName,
         staffSignerName: document.staffSignerName,
         departmentHeadName: document.departmentHeadName,
+        attachedDocuments: document.attachedDocuments,
         placeDate: document.placeDate,
         webViewLink: uploadRes.webViewLink,
       };
@@ -431,6 +432,12 @@ export default function App() {
       legalBases: draft.legalBases || [],
       staffSignerName: draft.staffSignerName || '',
       departmentHeadName: draft.departmentHeadName || 'Nguyễn Đắc Minh',
+      attachedDocuments: draft.attachedDocuments || [
+        'Dự thảo Công văn',
+        'Công văn đến số ....',
+        'Quyết định số ......',
+        'Tài liệu khác',
+      ],
     });
     setCurrentTab('editor');
     showNotification(`Đã tải dự thảo "${draft.title}" vào trình soạn thảo.`);
@@ -476,6 +483,7 @@ export default function App() {
       distributionList: tmpl.distributionList,
       signerRole: tmpl.defaultSignerRole,
       legalBases: tmpl.legalBases,
+      attachedDocuments: tmpl.attachedDocuments || prev.attachedDocuments,
     }));
     showNotification(`Đã kích hoạt áp dụng cấu trúc mẫu: ${tmpl.name}`);
   };

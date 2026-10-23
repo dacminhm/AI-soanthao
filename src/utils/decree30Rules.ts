@@ -21,6 +21,7 @@ export interface DocumentState {
   legalBases: string[];
   staffSignerName?: string;
   departmentHeadName?: string;
+  attachedDocuments?: string[];
 }
 
 export interface RuleViolation {
@@ -68,6 +69,12 @@ export function getDefaultDocumentState(): DocumentState {
     ],
     staffSignerName: '',
     departmentHeadName: 'Nguyễn Đắc Minh',
+    attachedDocuments: [
+      'Dự thảo Công văn',
+      'Công văn đến số ....',
+      'Quyết định số ......',
+      'Tài liệu khác',
+    ],
   };
 }
 
@@ -187,5 +194,53 @@ export function filterDocumentsList<T extends { title: string; docNumber: string
       item.title.toLowerCase().includes(q) ||
       item.docNumber.toLowerCase().includes(q)
     );
+  });
+}
+
+export const DEFAULT_PHIEU_TRINH_ATTACHMENTS: string[] = [
+  'Dự thảo Công văn',
+  'Công văn đến số ....',
+  'Quyết định số ......',
+  'Tài liệu khác',
+];
+
+/**
+ * Standardize attached documents list with Decree 30 punctuation:
+ * - Automatically prepends '- '
+ * - Adds ';' at the end of middle items
+ * - Adds '.' at the end of the last item
+ * - Preserves ellipsis (e.g. '....' or '......')
+ */
+export function formatAttachedDocuments(items?: string[] | string): string[] {
+  let list: string[] = [];
+  if (Array.isArray(items)) {
+    list = items.map((s) => s.trim()).filter((s) => s.length > 0);
+  } else if (typeof items === 'string') {
+    list = items.split('\n').map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+
+  if (list.length === 0) {
+    list = [...DEFAULT_PHIEU_TRINH_ATTACHMENTS];
+  }
+
+  return list.map((item, index) => {
+    let clean = item
+      .replace(/^[-*•–—]\s*/, '')
+      .replace(/^\d+[\.)]\s*/, '')
+      .trim();
+
+    // If item ends with a single period and NOT an ellipsis (...), strip that trailing period
+    if (!/\.{2,}$/.test(clean)) {
+      clean = clean.replace(/\.$/, '').trim();
+    }
+    // Strip trailing semicolon or comma
+    clean = clean.replace(/[;,]\s*$/, '').trim();
+
+    const isLast = index === list.length - 1;
+    let punct = ';';
+    if (isLast) {
+      punct = clean.endsWith('.') ? '' : '.';
+    }
+    return `- ${clean}${punct}`;
   });
 }

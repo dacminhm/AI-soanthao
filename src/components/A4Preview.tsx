@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { DocumentState } from '../utils/decree30Rules.ts';
+import { DocumentState, formatAttachedDocuments } from '../utils/decree30Rules.ts';
 
 interface A4PreviewProps {
   document: DocumentState;
@@ -60,6 +60,16 @@ export const A4Preview: React.FC<A4PreviewProps> = ({ document: doc }) => {
 
   // Format subject without duplicate V/v
   const displaySubject = doc.subject.replace(/^V\/v\s*:?\s*/i, '');
+
+  // Format recipient for Phieu Trinh
+  const phieuTrinhRecipient = doc.recipient?.trim()
+    ? (doc.recipient.trim().toLowerCase().startsWith('kính gửi')
+        ? doc.recipient.trim()
+        : `Kính gửi: ${doc.recipient.trim()}`)
+    : 'Kính gửi: Lãnh đạo Trung tâm';
+
+  // Format attached documents list with Decree 30 punctuation (- item; ... - item.)
+  const formattedAttachedDocs = formatAttachedDocuments(doc.attachedDocuments);
 
   // Split paragraphs for regular Cong Van
   const contentParagraphs = (doc.content || '')
@@ -363,7 +373,7 @@ Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, c
                     style={{ fontSize: '16.5px' }}
                     className="font-normal text-black text-center"
                   >
-                    Kính gửi: Lãnh đạo Trung tâm
+                    {phieuTrinhRecipient}
                   </p>
                 </div>
 
@@ -377,10 +387,11 @@ Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, c
                   {/* Khối tài liệu kèm theo (thụt đầu dòng 1.27cm) */}
                   <div style={{ paddingLeft: '1.27cm' }} className="leading-snug space-y-0.5">
                     <p className="font-normal">Tài liệu kèm theo:</p>
-                    <p className="pl-4 font-normal">- Dự thảo Công văn;</p>
-                    <p className="pl-4 font-normal">- Công văn đến số ....;</p>
-                    <p className="pl-4 font-normal">- Quyết định số ......;</p>
-                    <p className="pl-4 font-normal">- Tài liệu khác.</p>
+                    {formattedAttachedDocs.map((item, idx) => (
+                      <p key={idx} className="pl-4 font-normal">
+                        {item}
+                      </p>
+                    ))}
                   </div>
 
                   {/* Khung bút phê Lãnh đạo: Tiêu đề in đậm, CĂN GIỮA, có 3 dòng kẻ chấm nhạt */}
