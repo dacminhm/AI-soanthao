@@ -175,6 +175,55 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
       return next;
     });
   };
+
+  // Attached documents view mode and state handlers for Phieu Trinh
+  const [attachedViewMode, setAttachedViewMode] = useState<'list' | 'text'>('list');
+
+  const attachedDocs: string[] = Array.isArray(doc.attachedDocuments) && doc.attachedDocuments.length > 0
+    ? doc.attachedDocuments
+    : DEFAULT_PHIEU_TRINH_ATTACHMENTS;
+
+  const handleUpdateAttachedDoc = (index: number, val: string) => {
+    const next = [...attachedDocs];
+    next[index] = val;
+    onUpdateField('attachedDocuments', next);
+  };
+
+  const handleAddAttachedDoc = () => {
+    const next = [...attachedDocs, ''];
+    onUpdateField('attachedDocuments', next);
+  };
+
+  const handleRemoveAttachedDoc = (index: number) => {
+    if (attachedDocs.length <= 1) return;
+    const next = attachedDocs.filter((_, idx) => idx !== index);
+    onUpdateField('attachedDocuments', next);
+  };
+
+  const handleResetAttachedDocs = () => {
+    onUpdateField('attachedDocuments', [...DEFAULT_PHIEU_TRINH_ATTACHMENTS]);
+  };
+
+  const handleTextareaAttachedChange = (text: string) => {
+    const lines = text.split('\n');
+    onUpdateField('attachedDocuments', lines);
+  };
+
+  const handlePasteAttachedDoc = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    if (pastedText && pastedText.includes('\n')) {
+      e.preventDefault();
+      const newItems = pastedText
+        .split('\n')
+        .map((s) => s.trim().replace(/^[-*•–—]\s*/, ''))
+        .filter(Boolean);
+      if (newItems.length > 0) {
+        const next = [...attachedDocs];
+        next.splice(index, 1, ...newItems);
+        onUpdateField('attachedDocuments', next);
+      }
+    }
+  };
   // User custom prompt for AI writing
   const [aiCustomPrompt, setAiCustomPrompt] = useState<string>('');
 
