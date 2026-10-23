@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
+import { numberToVietnameseWords } from './src/utils/decree30Rules.ts';
 
 dotenv.config();
 
@@ -78,12 +79,46 @@ app.post('/api/ai/process-document', async (req: Request, res: Response): Promis
       customInstruction = '',
     } = req.body;
 
+    const isQuyetDinhDuToan =
+      mode === 'quyetdinh_dutoan' ||
+      (typeof docType === 'string' &&
+        (docType.toLowerCase().includes('dự toán') ||
+          docType.toLowerCase().includes('dutoan') ||
+          docType.toLowerCase().includes('quyetdinh_dutoan')));
+
     const isPhieuTrinh =
       mode === 'phieutrinh' ||
       (typeof docType === 'string' && docType.toLowerCase().includes('phiếu trình'));
 
     let userPromptDirective = '';
-    if (isPhieuTrinh) {
+    if (isQuyetDinhDuToan) {
+      userPromptDirective = `Nhiệm vụ trọng tâm: SOẠN THẢO VÀ PHÂN BỔ DỰ TOÁN KINH PHÍ CHO "QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN" CỦA GIÁM ĐỐC TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA (NGHỊ ĐỊNH 30/2020/NĐ-CP).
+
+CHỈ THỊ CẤU TRÚC VÀ TÍNH TOÁN DỰ TOÁN BẮT BUỘC:
+1. Trích yếu (trich_yeu): "Về việc phê duyệt dự toán chi tiết thực hiện nhiệm vụ [Tên nhiệm vụ]"
+2. Kính gửi (kinh_gui): "Ban Giám đốc và các đơn vị liên quan"
+3. Đoạn mở đầu (phan_mo_dau): "GIÁM ĐỐC TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA"
+4. Căn cứ pháp lý (can_cu_phap_ly):
+   - Căn cứ Luật Ngân sách nhà nước số 83/2015/QH13 ngày 25 tháng 6 năm 2015;
+   - Căn cứ Nghị định số 30/2020/NĐ-CP ngày 05 tháng 3 năm 2020 của Chính phủ về công tác văn thư;
+   - Căn cứ Quyết định số 128/QĐ-TĐC quy định chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Trung tâm Mã số, mã vạch Quốc gia;
+   - Căn cứ Quyết định giao quyền tự chủ tài chính cho Trung tâm Mã số, mã vạch Quốc gia;
+   - Theo đề nghị của Trưởng phòng Phòng Kế hoạch Tài chính,
+5. Thân quyết định (cac_y_kien_noi_dung): Đúng 3 Điều chuẩn mực hành chính:
+   - cac_y_kien_noi_dung[0] (Điều 1): "Điều 1. Phê duyệt kèm theo Quyết định này dự toán chi tiết thực hiện nhiệm vụ: \"[Tên nhiệm vụ]\" với các nội dung chủ yếu sau:\n1. Tên nhiệm vụ: [Tên nhiệm vụ]\n2. Đơn vị thực hiện: Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan.\n3. Tổng kinh phí phê duyệt: [Số tiền định dạng VNĐ, ví dụ: 120.000.000] đồng (Bằng chữ: [Số tiền bằng chữ]).\n(Chi tiết theo Phụ lục dự toán kèm theo Quyết định này).\n4. Nguồn kinh phí: [Nguồn kinh phí, ví dụ: Nguồn thu hoạt động sự nghiệp của Trung tâm].\n5. Thời gian thực hiện: [Thời gian thực hiện]."
+   - cac_y_kien_noi_dung[1] (Điều 2): "Điều 2. Trách nhiệm tổ chức thực hiện\n1. Phòng Kế hoạch Tài chính chịu trách nhiệm quản lý, sử dụng kinh phí được phê duyệt đúng mục đích, tiết kiệm, hiệu quả và thanh quyết toán theo khối lượng thực tế, định mức chi tiêu hiện hành của Nhà nước và Quy chế chi tiêu nội bộ của Trung tâm.\n2. Các đơn vị liên quan có trách nhiệm phối hợp triển khai thực hiện nhiệm vụ bảo đảm chất lượng và tiến độ quy định."
+   - cac_y_kien_noi_dung[2] (Điều 3): "Điều 3. Điều khoản thi hành\nQuyết định này có hiệu lực kể từ ngày ký. Trưởng phòng Phòng Tổ chức - Hành chính, Trưởng phòng Phòng Kế hoạch Tài chính, Thủ trưởng các phòng, đơn vị trực thuộc Trung tâm và các cá nhân có liên quan chịu trách nhiệm thi hành Quyết định này./."
+6. Đoạn kết luận (phan_ket_luan): "Quyết định này có hiệu lực kể từ ngày ký. Các đơn vị liên quan chịu trách nhiệm thi hành Quyết định này./."
+7. Phụ lục dự toán (phu_luc_du_toan): BẮT BUỘC PHẢI TRẢ VỀ ĐỐI TƯỢNG JSON NÀY:
+   - ten_nhiem_vu: string
+   - tong_kinh_phi: number (phải bằng chính xác tổng thanh_tien của cac_khoan_muc)
+   - tong_kinh_phi_bang_chu: string (phải khớp 100% với tong_kinh_phi, ví dụ: "Chín trăm triệu đồng chẵn.")
+   - nguon_kinh_phi: string
+   - thoi_gian_thuc_hien: string
+   - don_vi_thuc_hien: string
+   - cac_khoan_muc: BẮT BUỘC PHẢI CÓ từ 3 đến 6 khoản mục chi phân bổ cụ thể theo yêu cầu của người dùng (ví dụ: vé máy bay, khách sạn, visa, công tác phí...). Mỗi mục gồm: stt (number), noi_dung_chi (string), don_vi_tinh (string), so_luong (number), don_gia (number), thanh_tien (number = so_luong * don_gia). Tổng thanh_tien của tất cả các khoản mục phải cộng lại đúng bằng tong_kinh_phi.
+${customInstruction ? `\nƯU TIÊN TUYỆT ĐỐI BÁM SÁT VÀ THỰC THI CHÍNH XÁC YÊU CẦU SAU CỦA NGƯỜI DÙNG:\n"${customInstruction.trim()}"` : ''}`;
+    } else if (isPhieuTrinh) {
       userPromptDirective = `Nhiệm vụ trọng tâm: SOẠN THẢO VÀ CHUẨN HÓA NỘI DUNG "PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC" CHO PHÒNG KẾ HOẠCH TÀI CHÍNH TRÌNH LÃNH ĐẠO TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA (NGHỊ ĐỊNH 30/2020/NĐ-CP).
 
 CHỈ THỊ ĐỊNH DẠNG XUỐNG DÒNG (\n) VÀ CẤU TRÚC BẮT BUỘC CHO PHIẾU TRÌNH:
@@ -192,6 +227,33 @@ Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đ�
                 },
                 description: "Danh sách lỗi chính tả tiếng Việt phát hiện được và gợi ý sửa",
               },
+              phu_luc_du_toan: {
+                type: Type.OBJECT,
+                properties: {
+                  ten_nhiem_vu: { type: Type.STRING },
+                  tong_kinh_phi: { type: Type.NUMBER },
+                  tong_kinh_phi_bang_chu: { type: Type.STRING },
+                  nguon_kinh_phi: { type: Type.STRING },
+                  thoi_gian_thuc_hien: { type: Type.STRING },
+                  don_vi_thuc_hien: { type: Type.STRING },
+                  cac_khoan_muc: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        stt: { type: Type.NUMBER },
+                        noi_dung_chi: { type: Type.STRING },
+                        don_vi_tinh: { type: Type.STRING },
+                        so_luong: { type: Type.NUMBER },
+                        don_gia: { type: Type.NUMBER },
+                        thanh_tien: { type: Type.NUMBER },
+                      },
+                      required: ['stt', 'noi_dung_chi', 'don_vi_tinh', 'so_luong', 'don_gia', 'thanh_tien'],
+                    },
+                  },
+                },
+                required: ['ten_nhiem_vu', 'tong_kinh_phi', 'tong_kinh_phi_bang_chu', 'cac_khoan_muc'],
+              },
             },
             required: ['trich_yeu', 'kinh_gui', 'phan_mo_dau', 'cac_y_kien_noi_dung', 'phan_ket_luan'],
           },
@@ -213,17 +275,180 @@ Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đ�
     }
 
     // High-quality deterministic fallback if no API key is provided
-    const fallbackData = generateSmartFallback(mode, subject, recipient, opening, content, closing, docType);
+    const fallbackData = generateSmartFallback(mode, subject, recipient, opening, content, closing, docType, customInstruction);
     res.json({ success: true, data: fallbackData, note: 'Generated with Administrative Knowledge Base' });
   } catch (error: any) {
     console.error('Error processing document AI:', error);
     // Return gracefully with structured administrative fallback
-    const fallbackData = generateSmartFallback(req.body?.mode || 'standardize', req.body?.subject, req.body?.recipient, req.body?.opening, req.body?.content, req.body?.closing, req.body?.docType);
+    const fallbackData = generateSmartFallback(req.body?.mode || 'standardize', req.body?.subject, req.body?.recipient, req.body?.opening, req.body?.content, req.body?.closing, req.body?.docType, req.body?.customInstruction);
     res.json({ success: true, data: fallbackData, warning: error.message });
   }
 });
 
-function generateSmartFallback(mode: string, subject: string, recipient: string, opening: string, content: string, closing: string, docType: string = '') {
+function generateSmartFallback(mode: string, subject: string, recipient: string, opening: string, content: string, closing: string, docType: string = '', customInstruction: string = '') {
+  const isQuyetDinhDuToan =
+    mode === 'quyetdinh_dutoan' ||
+    (typeof docType === 'string' &&
+      (docType.toLowerCase().includes('dự toán') ||
+        docType.toLowerCase().includes('dutoan') ||
+        docType.toLowerCase().includes('quyetdinh_dutoan')));
+
+  if (isQuyetDinhDuToan) {
+    const rawSubject = subject || '';
+    let cleanTask = rawSubject
+      ? rawSubject.replace(/^V\/v\s*/i, '').replace(/^(phê duyệt dự toán chi tiết thực hiện nhiệm vụ:?\s*)/i, '')
+      : 'Nâng cấp cơ sở dữ liệu quốc gia về mã số mã vạch và cổng thông tin truy xuất năm 2026';
+
+    let totalBudget = 120000000;
+    const lowerInstr = (customInstruction || '').toLowerCase();
+
+    // Parse custom budget from prompt
+    if (customInstruction) {
+      const matchBillion = customInstruction.match(/(\d+(?:[.,]\d+)?)\s*(tỷ|ti)/i);
+      const matchMillion = customInstruction.match(/(\d+(?:[.,]\d+)?)\s*(triệu|tr)/i);
+      const matchRaw = customInstruction.match(/(\d{1,3}(?:\.\d{3}){2,})/);
+      if (matchBillion) {
+        totalBudget = Math.round(parseFloat(matchBillion[1].replace(',', '.')) * 1000000000);
+      } else if (matchMillion) {
+        totalBudget = Math.round(parseFloat(matchMillion[1].replace(',', '.')) * 1000000);
+      } else if (matchRaw) {
+        totalBudget = parseInt(matchRaw[1].replace(/\./g, ''), 10);
+      }
+
+      // Parse custom task from prompt
+      const taskMatch = customInstruction.match(/(?:nhiệm vụ|đề tài|dự án|kế hoạch)\s*[:"“]?\s*([^,.;\n]+)/i);
+      if (taskMatch && taskMatch[1].trim().length > 3) {
+        cleanTask = taskMatch[1].trim().replace(/["”]/g, '');
+      } else if (lowerInstr.includes('châu âu') || lowerInstr.includes('khảo sát')) {
+        cleanTask = 'Khảo sát, học tập kinh nghiệm kỹ thuật mã số mã vạch và truy xuất tại các nước Châu Âu năm 2026';
+      }
+    }
+
+    const normSubject = `Về việc phê duyệt dự toán chi tiết thực hiện nhiệm vụ ${cleanTask}`;
+    const normOpening = 'GIÁM ĐỐC TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA';
+    const totalWords = numberToVietnameseWords(totalBudget) || 'Một trăm hai mươi triệu đồng chẵn.';
+    const totalFormatted = new Intl.NumberFormat('vi-VN').format(totalBudget);
+
+    // Dynamic items allocation
+    let itemsList = [];
+    if (lowerInstr.includes('châu âu') || lowerInstr.includes('vé máy bay') || lowerInstr.includes('khách sạn') || lowerInstr.includes('visa')) {
+      const part1 = Math.round(totalBudget * 0.40);
+      const part2 = Math.round(totalBudget * 0.25);
+      const part3 = Math.round(totalBudget * 0.10);
+      const part4 = Math.round(totalBudget * 0.15);
+      const part5 = totalBudget - (part1 + part2 + part3 + part4);
+
+      itemsList = [
+        {
+          stt: 1,
+          noi_dung_chi: 'Chi phí vé máy bay khứ hồi quốc tế và di chuyển chặng nội địa Châu Âu (đoàn công tác)',
+          don_vi_tinh: 'Vé',
+          so_luong: 4,
+          don_gia: Math.round(part1 / 4),
+          thanh_tien: part1
+        },
+        {
+          stt: 2,
+          noi_dung_chi: 'Chi phí thuê phòng khách sạn, lưu trú tại nước sở tại theo định mức tài chính',
+          don_vi_tinh: 'Đêm/phòng',
+          so_luong: 20,
+          don_gia: Math.round(part2 / 20),
+          thanh_tien: part2
+        },
+        {
+          stt: 3,
+          noi_dung_chi: 'Lệ phí hồ sơ xin cấp visa Châu Âu (Schengen) và bảo hiểm công tác quốc tế',
+          don_vi_tinh: 'Người',
+          so_luong: 4,
+          don_gia: Math.round(part3 / 4),
+          thanh_tien: part3
+        },
+        {
+          stt: 4,
+          noi_dung_chi: 'Chi phí thù lao chuyên gia đối tác GS1, thông dịch viên kỹ thuật tại nước sở tại',
+          don_vi_tinh: 'Ngày/buổi',
+          so_luong: 10,
+          don_gia: Math.round(part4 / 10),
+          thanh_tien: part4
+        },
+        {
+          stt: 5,
+          noi_dung_chi: 'Tiền công tác phí, phụ cấp lưu trú và phương tiện làm việc tại nước ngoài',
+          don_vi_tinh: 'Đợt',
+          so_luong: 1,
+          don_gia: part5,
+          thanh_tien: part5
+        }
+      ];
+    } else {
+      const ratios = [0.25, 0.25, 0.25, 0.10, 0.15];
+      const standardNames = [
+        'Chi phí thù lao chuyên gia tư vấn xây dựng hệ thống định danh',
+        'Tổ chức hội thảo kỹ thuật tiêu chuẩn mã số mã vạch và truy xuất',
+        'Thuê hạ tầng máy chủ điện toán đám mây và lưu trữ dữ liệu thử nghiệm',
+        'In ấn tài liệu hướng dẫn kỹ thuật và biểu mẫu kiểm tra định danh',
+        'Công tác phí khảo sát, hỗ trợ kỹ thuật tại các doanh nghiệp địa phương'
+      ];
+      const units = ['Người/tháng', 'Cuộc', 'Tháng', 'Bộ', 'Đợt'];
+      const quantities = [2, 1, 3, 200, 2];
+
+      let sumAllocated = 0;
+      itemsList = ratios.map((ratio, idx) => {
+        const isLast = idx === ratios.length - 1;
+        const amt = isLast ? totalBudget - sumAllocated : Math.round(totalBudget * ratio);
+        sumAllocated += amt;
+        const qty = quantities[idx];
+        return {
+          stt: idx + 1,
+          noi_dung_chi: standardNames[idx],
+          don_vi_tinh: units[idx],
+          so_luong: qty,
+          don_gia: Math.round(amt / qty),
+          thanh_tien: amt
+        };
+      });
+    }
+
+    const items = [
+      `Điều 1. Phê duyệt kèm theo Quyết định này dự toán chi tiết thực hiện nhiệm vụ: "${cleanTask}" với các nội dung chủ yếu sau:\n1. Tên nhiệm vụ: ${cleanTask}.\n2. Đơn vị thực hiện: Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan.\n3. Tổng kinh phí phê duyệt: ${totalFormatted} đồng (Bằng chữ: ${totalWords}).\n(Chi tiết theo Phụ lục dự toán kèm theo Quyết định này).\n4. Nguồn kinh phí: Nguồn thu hoạt động sự nghiệp của Trung tâm.\n5. Thời gian thực hiện: Quý IV năm 2026.`,
+      `Điều 2. Trách nhiệm tổ chức thực hiện\n1. Phòng Kế hoạch Tài chính chịu trách nhiệm quản lý, sử dụng kinh phí được phê duyệt đúng mục đích, tiết kiệm, hiệu quả và thanh quyết toán theo khối lượng thực tế, định mức chi tiêu hiện hành của Nhà nước và Quy chế chi tiêu nội bộ của Trung tâm.\n2. Các đơn vị liên quan có trách nhiệm phối hợp triển khai thực hiện nhiệm vụ bảo đảm chất lượng và tiến độ quy định.`,
+      `Điều 3. Điều khoản thi hành\nQuyết định này có hiệu lực kể từ ngày ký. Trưởng phòng Phòng Tổ chức - Hành chính, Trưởng phòng Phòng Kế hoạch Tài chính, Thủ trưởng các phòng, đơn vị trực thuộc Trung tâm và các cá nhân có liên quan chịu trách nhiệm thi hành Quyết định này./.`
+    ];
+
+    const phuLucDuToan = {
+      ten_nhiem_vu: cleanTask,
+      tong_kinh_phi: totalBudget,
+      tong_kinh_phi_bang_chu: totalWords,
+      nguon_kinh_phi: 'Nguồn thu hoạt động sự nghiệp của Trung tâm',
+      thoi_gian_thuc_hien: 'Quý IV năm 2026',
+      don_vi_thuc_hien: 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan',
+      cac_khoan_muc: itemsList
+    };
+
+    return {
+      trich_yeu: normSubject,
+      kinh_gui: 'Ban Giám đốc và các đơn vị liên quan',
+      phan_mo_dau: normOpening,
+      can_cu_phap_ly: [
+        'Căn cứ Luật Ngân sách nhà nước số 83/2015/QH13 ngày 25 tháng 6 năm 2015;',
+        'Căn cứ Nghị định số 30/2020/NĐ-CP ngày 05 tháng 3 năm 2020 của Chính phủ về công tác văn thư;',
+        'Căn cứ Quyết định số 128/QĐ-TĐC quy định chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Trung tâm Mã số, mã vạch Quốc gia;',
+        'Căn cứ Quyết định giao quyền tự chủ tài chính cho Trung tâm Mã số, mã vạch Quốc gia;',
+        'Theo đề nghị của Trưởng phòng Phòng Kế hoạch Tài chính,'
+      ],
+      cac_y_kien_noi_dung: items,
+      phan_ket_luan: 'Quyết định này có hiệu lực kể từ ngày ký. Các đơn vị liên quan chịu trách nhiệm thi hành Quyết định này./.',
+      phu_luc_du_toan: phuLucDuToan,
+      canh_bao_logic_va_ngu_phap: [
+        {
+          vi_tri: 'Điều 1 - Khoản 3',
+          loi_nhan_xet: 'Đã tự động tính toán tổng số tiền và đối chiếu khớp 100% với số tiền bằng chữ theo bảng phụ lục chi tiết.',
+          de_xuat_sua: `Tổng kinh phí: ${totalFormatted} đồng (Bằng chữ: ${totalWords}).`
+        }
+      ]
+    };
+  }
+
   const isPhieuTrinh =
     mode === 'phieutrinh' ||
     (typeof docType === 'string' && docType.toLowerCase().includes('phiếu trình'));

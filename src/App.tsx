@@ -301,6 +301,7 @@ export default function App() {
         staffSignerName: document.staffSignerName,
         departmentHeadName: document.departmentHeadName,
         attachedDocuments: document.attachedDocuments,
+        budgetEstimate: document.budgetEstimate,
         placeDate: document.placeDate,
         webViewLink: uploadRes.webViewLink,
       };
@@ -438,6 +439,7 @@ export default function App() {
         'Quyết định số ......',
         'Tài liệu khác',
       ],
+      budgetEstimate: draft.budgetEstimate,
     });
     setCurrentTab('editor');
     showNotification(`Đã tải dự thảo "${draft.title}" vào trình soạn thảo.`);
@@ -484,6 +486,7 @@ export default function App() {
       signerRole: tmpl.defaultSignerRole,
       legalBases: tmpl.legalBases,
       attachedDocuments: tmpl.attachedDocuments || prev.attachedDocuments,
+      budgetEstimate: prev.budgetEstimate,
     }));
     showNotification(`Đã kích hoạt áp dụng cấu trúc mẫu: ${tmpl.name}`);
   };

@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DocumentState, formatSubject, DEFAULT_PHIEU_TRINH_ATTACHMENTS } from '../utils/decree30Rules.ts';
+import {
+  DocumentState,
+  formatSubject,
+  DEFAULT_PHIEU_TRINH_ATTACHMENTS,
+  DEFAULT_BUDGET_ITEMS,
+  formatVND,
+  numberToVietnameseWords,
+  buildDefaultQuyetDinhDuToanContent,
+  DEFAULT_ARTICLE_2,
+  DEFAULT_ARTICLE_3,
+  BudgetEstimateData,
+  BudgetItem,
+} from '../utils/decree30Rules.ts';
 import { generateDecree30Docx, downloadBlob } from '../utils/docxExport.ts';
 
 interface EditorAccordionProps {
@@ -149,6 +161,114 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
     doc.docType?.toLowerCase().includes('phiếu trình') ||
     doc.docType?.toLowerCase().includes('phieutrinh') ||
     doc.docType === 'phieutrinh';
+
+  // Check if current document is Quyet Dinh Phe Duyet Du Toan
+  const isQuyetDinhDuToan =
+    doc.docType?.toLowerCase().includes('dự toán') ||
+    doc.docType?.toLowerCase().includes('dutoan') ||
+    doc.docType === 'quyetdinh_dutoan';
+
+  const budgetData: BudgetEstimateData = doc.budgetEstimate || {
+    taskName: doc.subject || 'Nâng cấp cơ sở dữ liệu quốc gia về mã số mã vạch và cổng thông tin truy xuất năm 2026',
+    totalAmount: 120000000,
+    totalAmountWords: 'Một trăm hai mươi triệu đồng chẵn.',
+    fundingSource: 'Nguồn thu hoạt động sự nghiệp của Trung tâm',
+    implementationTime: 'Quý IV năm 2026',
+    implementingUnit: 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan',
+    items: DEFAULT_BUDGET_ITEMS,
+  };
+
+  const handleUpdateBudgetField = (field: keyof BudgetEstimateData, value: any) => {
+    const current = doc.budgetEstimate || budgetData;
+    const updated: BudgetEstimateData = {
+      ...current,
+      [field]: value,
+    };
+    onUpdateField('budgetEstimate', updated);
+  };
+
+  const handleUpdateBudgetItem = (index: number, field: keyof BudgetItem, value: any) => {
+    const current = doc.budgetEstimate || budgetData;
+    const newItems = [...current.items];
+    const targetItem = { ...newItems[index], [field]: value };
+
+    if (field === 'quantity' || field === 'unitPrice') {
+      const q = field === 'quantity' ? Number(value) || 0 : Number(targetItem.quantity) || 0;
+      const p = field === 'unitPrice' ? Number(value) || 0 : Number(targetItem.unitPrice) || 0;
+      targetItem.amount = q * p;
+    }
+
+    newItems[index] = targetItem;
+    const newTotal = newItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
+    const newWords = numberToVietnameseWords(newTotal);
+
+    const updated: BudgetEstimateData = {
+      ...current,
+      items: newItems,
+      totalAmount: newTotal,
+      totalAmountWords: newWords,
+    };
+    onUpdateField('budgetEstimate', updated);
+  };
+
+  const handleAddBudgetItem = () => {
+    const current = doc.budgetEstimate || budgetData;
+    const nextStt = current.items.length + 1;
+    const newItem: BudgetItem = {
+      id: `item-${Date.now()}`,
+      stt: nextStt,
+      content: '',
+      unit: 'Gói',
+      quantity: 1,
+      unitPrice: 0,
+      amount: 0,
+    };
+    const newItems = [...current.items, newItem];
+    const updated: BudgetEstimateData = {
+      ...current,
+      items: newItems,
+    };
+    onUpdateField('budgetEstimate', updated);
+  };
+
+  const handleRemoveBudgetItem = (index: number) => {
+    const current = doc.budgetEstimate || budgetData;
+    if (current.items.length <= 1) return;
+    const newItems = current.items
+      .filter((_, idx) => idx !== index)
+      .map((it, idx) => ({ ...it, stt: idx + 1 }));
+    const newTotal = newItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
+    const newWords = numberToVietnameseWords(newTotal);
+
+    const updated: BudgetEstimateData = {
+      ...current,
+      items: newItems,
+      totalAmount: newTotal,
+      totalAmountWords: newWords,
+    };
+    onUpdateField('budgetEstimate', updated);
+  };
+
+  const handleResetBudgetItems = () => {
+    const resetItems = [...DEFAULT_BUDGET_ITEMS];
+    const total = resetItems.reduce((acc, it) => acc + it.amount, 0);
+    const words = numberToVietnameseWords(total);
+    const updated: BudgetEstimateData = {
+      ...(doc.budgetEstimate || budgetData),
+      items: resetItems,
+      totalAmount: total,
+      totalAmountWords: words,
+    };
+    onUpdateField('budgetEstimate', updated);
+    onNotify('Đã khôi phục 5 mục dự toán mẫu ban đầu.');
+  };
+
+  const handleSyncBudgetToArticles = () => {
+    const current = doc.budgetEstimate || budgetData;
+    const content = buildDefaultQuyetDinhDuToanContent(current);
+    onUpdateField('content', content);
+    onNotify('Đã đồng bộ lại nội dung 3 Điều Quyết định từ thông số dự toán.');
+  };
 
   // Toggle view mode for Phieu Trinh: structured form vs full-text editor
   const [phieuTrinhViewMode, setPhieuTrinhViewMode] = useState<'structured' | 'fulltext'>('structured');
@@ -301,7 +421,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
   };
 
   // Trigger Gemini AI processing (Full Document Rewrite & Refinement)
-  const handleCallAI = async (mode: 'standardize' | 'audit' | 'suggest_msmv' | 'phieutrinh' = 'standardize') => {
+  const handleCallAI = async (mode: 'standardize' | 'audit' | 'suggest_msmv' | 'phieutrinh' | 'quyetdinh_dutoan' = 'standardize') => {
     const hasPrompt = aiCustomPrompt && aiCustomPrompt.trim().length > 0;
     const hasExistingContent =
       (doc.content && doc.content.trim().length > 0) ||
@@ -315,7 +435,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
     }
 
     setAiValidationErrors({ opening: false, content: false });
-    const aiEffectiveMode = isPhieuTrinh ? 'phieutrinh' : mode;
+    const aiEffectiveMode = isQuyetDinhDuToan ? 'quyetdinh_dutoan' : (isPhieuTrinh ? 'phieutrinh' : mode);
     setIsProcessingAI(true);
     setActiveAIMode(aiEffectiveMode);
     try {
@@ -351,11 +471,58 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
         if (d.can_cu_phap_ly && Array.isArray(d.can_cu_phap_ly) && d.can_cu_phap_ly.length > 0) {
           onUpdateField('legalBases', d.can_cu_phap_ly);
         }
+        if (d.phu_luc_du_toan) {
+          const pldt = d.phu_luc_du_toan;
+          const itemsRaw = pldt.cac_khoan_muc || pldt.danh_sach_chi_tiet || pldt.items;
+          const parsedItems = Array.isArray(itemsRaw) && itemsRaw.length > 0
+            ? itemsRaw.map((it: any, idx: number) => {
+                const qty = Number(it.so_luong ?? it.quantity) || 1;
+                const price = Number(it.don_gia ?? it.unitPrice) || 0;
+                const amt = Number(it.thanh_tien ?? it.amount) || qty * price;
+                return {
+                  id: `ai-item-${idx + 1}-${Date.now()}`,
+                  stt: it.stt || (idx + 1),
+                  content: it.noi_dung_chi || it.noi_dung || it.content || '',
+                  unit: it.don_vi_tinh || it.unit || 'Gói',
+                  quantity: qty,
+                  unitPrice: price,
+                  amount: amt,
+                  note: it.ghi_chu || it.note || '',
+                };
+              })
+            : (doc.budgetEstimate?.items || DEFAULT_BUDGET_ITEMS);
+
+          const calculatedTotal = parsedItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
+          const finalTotal = typeof pldt.tong_kinh_phi === 'number' && pldt.tong_kinh_phi > 0 ? pldt.tong_kinh_phi : calculatedTotal;
+          const finalWords = pldt.tong_kinh_phi_bang_chu || numberToVietnameseWords(finalTotal);
+
+          const newEstimate: BudgetEstimateData = {
+            taskName: pldt.ten_nhiem_vu || doc.budgetEstimate?.taskName || doc.subject,
+            totalAmount: finalTotal,
+            totalAmountWords: finalWords,
+            fundingSource: pldt.nguon_kinh_phi || doc.budgetEstimate?.fundingSource || 'Nguồn thu hoạt động sự nghiệp của Trung tâm',
+            implementationTime: pldt.thoi_gian_thuc_hien || doc.budgetEstimate?.implementationTime || 'Quý IV năm 2026',
+            implementingUnit: pldt.don_vi_thuc_hien || doc.budgetEstimate?.implementingUnit || 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan',
+            items: parsedItems,
+            customArticle2: doc.budgetEstimate?.customArticle2,
+            customArticle3: doc.budgetEstimate?.customArticle3,
+          };
+          onUpdateField('budgetEstimate', newEstimate);
+          if (pldt.ten_nhiem_vu) {
+            onUpdateField('subject', pldt.ten_nhiem_vu);
+          }
+        }
         if (d.canh_bao_logic_va_ngu_phap && Array.isArray(d.canh_bao_logic_va_ngu_phap)) {
           setAiWarnings(d.canh_bao_logic_va_ngu_phap);
         }
 
-        onNotify('✨ Trợ lý AI đã soạn thảo và đồng bộ toàn văn công văn thành công!');
+        onNotify(
+          isQuyetDinhDuToan
+            ? '✨ Trợ lý AI đã phân bổ dự toán và lập chuẩn 3 Điều Quyết định thành công!'
+            : isPhieuTrinh
+            ? '✨ Trợ lý AI đã phân bổ thông tin vào các nhánh của Phiếu trình thành công!'
+            : '✨ Trợ lý AI đã soạn thảo và đồng bộ toàn văn công văn thành công!'
+        );
       } else {
         onNotify('Không nhận được kết quả từ Trợ lý AI. Vui lòng thử lại.');
       }
@@ -584,12 +751,12 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   </label>
                   <div className="relative">
                     <select
-                      value={isPhieuTrinh ? 'phieutrinh' : (doc.docType || 'congvan')}
+                      value={isPhieuTrinh ? 'phieutrinh' : isQuyetDinhDuToan ? 'quyetdinh_dutoan' : (doc.docType || 'congvan')}
                       onChange={(e) => {
                         const val = e.target.value;
                         if (val === 'phieutrinh') {
                           onUpdateField('docType', 'PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC');
-                          if (!doc.docSymbol || doc.docSymbol === '/MSMV-KHTC') {
+                          if (!doc.docSymbol || doc.docSymbol === '/MSMV-KHTC' || doc.docSymbol === '/QĐ-MSMV') {
                             onUpdateField('docSymbol', '/PTr-MSMV');
                           }
                           if (!doc.recipient || doc.recipient === 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia') {
@@ -607,14 +774,40 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                           if (!doc.attachedDocuments || doc.attachedDocuments.length === 0) {
                             onUpdateField('attachedDocuments', [...DEFAULT_PHIEU_TRINH_ATTACHMENTS]);
                           }
-                          if (!doc.content || doc.content.includes('nâng cấp máy chủ cơ sở dữ liệu')) {
+                          if (!doc.content || doc.content.includes('nâng cấp máy chủ cơ sở dữ liệu') || doc.content.includes('Điều 1.')) {
                             const defaultPT = `1. Tóm tắt nội dung công việc:\nThực hiện chỉ đạo của Lãnh đạo Trung tâm tại ...\n- Về tiến độ thực hiện: ...\n- Về các công việc đã thực hiện: ...\n- Kết quả đạt được: ...\n\n2. Ý kiến của các đơn vị liên quan:\nNội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan.\n\n3. Ý kiến của đơn vị trình:\na) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]\nb) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]\nPhòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`;
                             onUpdateField('content', defaultPT);
                           }
                           onNotify('Đã chuyển sang mẫu: PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC');
+                        } else if (val === 'quyetdinh_dutoan') {
+                          onUpdateField('docType', 'QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN');
+                          onUpdateField('docSymbol', '/QĐ-MSMV');
+                          onUpdateField('signerRole', 'GIÁM ĐỐC');
+                          onUpdateField('signerName', 'Bùi Bá Chính');
+                          onUpdateField('distributionList', ['- Như Điều 3;', '- Ban Giám đốc;', '- Lưu: VT, KHTC.']);
+                          onUpdateField('departmentHeadName', 'Nguyễn Đắc Minh');
+                          onUpdateField('legalBases', [
+                            'Luật Ngân sách nhà nước số 83/2015/QH13 ngày 25 tháng 6 năm 2015',
+                            'Nghị định số 30/2020/NĐ-CP ngày 05 tháng 3 năm 2020 của Chính phủ về công tác văn thư',
+                            'Quyết định số 128/QĐ-TĐC ngày 28 tháng 02 năm 2024 của Tổng cục Tiêu chuẩn Đo lường Chất lượng quy định chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Trung tâm Mã số, mã vạch Quốc gia',
+                            'Quyết định giao quyền tự chủ tài chính cho Trung tâm Mã số, mã vạch Quốc gia',
+                            'Theo đề nghị của Trưởng phòng Phòng Kế hoạch Tài chính',
+                          ]);
+                          const defaultEstimate = doc.budgetEstimate || {
+                            taskName: doc.subject || 'Nâng cấp cơ sở dữ liệu quốc gia về mã số mã vạch và cổng thông tin truy xuất năm 2026',
+                            totalAmount: 120000000,
+                            totalAmountWords: 'Một trăm hai mươi triệu đồng chẵn.',
+                            fundingSource: 'Nguồn thu hoạt động sự nghiệp của Trung tâm',
+                            implementationTime: 'Quý IV năm 2026',
+                            implementingUnit: 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan',
+                            items: DEFAULT_BUDGET_ITEMS,
+                          };
+                          onUpdateField('budgetEstimate', defaultEstimate);
+                          onUpdateField('content', buildDefaultQuyetDinhDuToanContent(defaultEstimate));
+                          onNotify('Đã chuyển sang mẫu: QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN');
                         } else if (val === 'congvan' || val === 'CÔNG VĂN HÀNH CHÍNH') {
                           onUpdateField('docType', 'CÔNG VĂN HÀNH CHÍNH');
-                          if (doc.docSymbol === '/PTr-MSMV') onUpdateField('docSymbol', '/MSMV-KHTC');
+                          if (doc.docSymbol === '/PTr-MSMV' || doc.docSymbol === '/QĐ-MSMV') onUpdateField('docSymbol', '/MSMV-KHTC');
                           onNotify('Đã chuyển sang mẫu: CÔNG VĂN HÀNH CHÍNH');
                         } else {
                           onUpdateField('docType', val);
@@ -624,13 +817,14 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     >
                       <option value="congvan">CÔNG VĂN HÀNH CHÍNH</option>
                       <option value="phieutrinh">PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC</option>
+                      <option value="quyetdinh_dutoan">QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN</option>
                       <option value="TỜ TRÌNH">TỜ TRÌNH</option>
                       <option value="QUYẾT ĐỊNH CÁ BIỆT">QUYẾT ĐỊNH CÁ BIỆT</option>
                       <option value="THÔNG BÁO NỘI BỘ">THÔNG BÁO NỘI BỘ</option>
                     </select>
                   </div>
                   <p className="text-[10px] text-amber-800 font-medium mt-1">
-                    {isPhieuTrinh ? '✓ Đang kích hoạt cấu trúc Phiếu trình chuẩn NĐ 30/2020' : '✓ Chuẩn thể thức văn bản hành chính Nghị định 30/2020/NĐ-CP'}
+                    {isPhieuTrinh ? '✓ Đang kích hoạt cấu trúc Phiếu trình chuẩn NĐ 30/2020' : isQuyetDinhDuToan ? '✓ Chuẩn mẫu Quyết định phê duyệt dự toán kèm Phụ lục chi tiết của Trung tâm' : '✓ Chuẩn thể thức văn bản hành chính Nghị định 30/2020/NĐ-CP'}
                   </p>
                 </div>
               </div>
@@ -786,6 +980,61 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     </div>
                   </div>
                 </div>
+              ) : isQuyetDinhDuToan ? (
+                /* BỐ CỤC QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN */
+                <div className="space-y-4 pt-2 border-t border-gray-100">
+                  <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-slate-800 flex items-center">
+                        <i className="fa-solid fa-file-invoice-dollar text-amber-700 mr-1.5"></i>
+                        1. Tên nhiệm vụ cần phê duyệt dự toán (Trích yếu Quyết định)
+                      </label>
+                      <span className="text-[10px] text-amber-800 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        Hiển thị đậm giữa trang &amp; trên Phụ lục
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={doc.budgetEstimate?.taskName || doc.subject}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        onUpdateField('subject', val);
+                        handleUpdateBudgetField('taskName', val);
+                      }}
+                      placeholder="VD: Nâng cấp cơ sở dữ liệu quốc gia về mã số mã vạch và cổng thông tin truy xuất năm 2026..."
+                      className="w-full text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 font-semibold px-3 py-2 bg-white text-slate-800 shadow-2xs resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        2. Thẩm quyền ban hành Quyết định
+                      </label>
+                      <input
+                        type="text"
+                        value={doc.signerRole || 'GIÁM ĐỐC TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA'}
+                        onChange={(e) => onUpdateField('signerRole', e.target.value)}
+                        className="w-full text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 font-semibold px-3 py-2 bg-white text-slate-800 shadow-2xs"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Cỡ 13-14, chữ in hoa, in đậm, căn giữa</p>
+                    </div>
+
+                    <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                      <label className="block text-xs font-bold text-slate-800 mb-1">
+                        3. Đơn vị chủ trì thực hiện nhiệm vụ
+                      </label>
+                      <input
+                        type="text"
+                        value={doc.budgetEstimate?.implementingUnit || 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan'}
+                        onChange={(e) => handleUpdateBudgetField('implementingUnit', e.target.value)}
+                        placeholder="Phòng Kế hoạch Tài chính chủ trì..."
+                        className="w-full text-xs rounded-lg border border-slate-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-600 font-medium px-3 py-2 bg-white text-slate-800 shadow-2xs"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Ghi nhận tại Khoản 2 Điều 1 và đầu trang Phụ lục</p>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 /* BỐ CỤC CÔNG VĂN ĐI NGHỊ ĐỊNH 30 */
                 <div className="space-y-3 pt-1 border-t border-gray-100">
@@ -846,7 +1095,11 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               </div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-sm font-bold text-slate-900">
-                  Nội dung thân công văn &amp; Trợ lý AI
+                  {isPhieuTrinh
+                    ? 'Nội dung Phiếu trình & Trợ lý AI'
+                    : isQuyetDinhDuToan
+                    ? 'Soạn thảo 3 Điều Quyết định & Bảng dự toán chi tiết'
+                    : 'Nội dung thân công văn & Trợ lý AI'}
                 </h2>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mr-1.5"></span>
@@ -885,7 +1138,8 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
 
           {isBlock2Open && (
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
-              {/* Đoạn mở đầu công văn (Dẫn chiếu công văn đến) - Nổi bật, nền trắng, viền rõ, có icon bút chì */}
+              {/* Đoạn mở đầu công văn (Dẫn chiếu công văn đến) - Ẩn đối với Quyết định phê duyệt dự toán */}
+              {!isQuyetDinhDuToan && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
@@ -938,6 +1192,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   </p>
                 )}
               </div>
+              )}
 
               {/* Danh sách chip tag gợi ý căn cứ pháp lý */}
               <div>
@@ -1008,7 +1263,379 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   )}
                 </div>
 
-                {isPhieuTrinh && phieuTrinhViewMode === 'structured' ? (
+                {isQuyetDinhDuToan ? (
+                  /* ========================================================= */
+                  /* GIAO DIỆN SOẠN THẢO QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN          */
+                  /* ========================================================= */
+                  <div className="space-y-4">
+                    {/* KHỐI 1: THÔNG SỐ ĐIỀU 1 QUYẾT ĐỊNH */}
+                    <div className="bg-slate-50/80 p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-5 h-5 rounded-md bg-slate-900 text-amber-400 font-bold text-[10px] flex items-center justify-center">1</span>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">1. Thông số phê duyệt (Nội dung Điều 1)</h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleSyncBudgetToArticles}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-lg border border-amber-300 transition cursor-pointer shadow-2xs"
+                          title="Cập nhật tự động các thông số dự toán vào văn bản 3 Điều"
+                        >
+                          <i className="fa-solid fa-arrows-rotate text-[10px] text-amber-700"></i>
+                          <span>Đồng bộ vào văn bản 3 Điều</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {/* Tổng kinh phí */}
+                        <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                            Tổng kinh phí phê duyệt (đồng)
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              value={doc.budgetEstimate?.totalAmount || 0}
+                              onChange={(e) => {
+                                const val = Number(e.target.value) || 0;
+                                handleUpdateBudgetField('totalAmount', val);
+                                handleUpdateBudgetField('totalAmountWords', numberToVietnameseWords(val));
+                              }}
+                              className="flex-1 text-xs font-bold font-mono px-2.5 py-1.5 border border-slate-300 rounded-lg focus:border-amber-600 focus:ring-1 focus:ring-amber-200"
+                            />
+                            <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg shrink-0 font-mono">
+                              {formatVND(doc.budgetEstimate?.totalAmount || 0)}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 italic mt-1.5">
+                            Bằng chữ: <strong className="text-slate-800 font-normal">{doc.budgetEstimate?.totalAmountWords || numberToVietnameseWords(doc.budgetEstimate?.totalAmount || 0)}</strong>
+                          </p>
+                        </div>
+
+                        {/* Nguồn kinh phí */}
+                        <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                            Nguồn kinh phí
+                          </label>
+                          <input
+                            type="text"
+                            value={doc.budgetEstimate?.fundingSource || 'Nguồn thu hoạt động sự nghiệp của Trung tâm'}
+                            onChange={(e) => handleUpdateBudgetField('fundingSource', e.target.value)}
+                            placeholder="Nguồn thu hoạt động sự nghiệp của Trung tâm..."
+                            className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg focus:border-amber-600 focus:ring-1 focus:ring-amber-200"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1">Ghi nhận tại Khoản 4 Điều 1</p>
+                        </div>
+
+                        {/* Thời gian thực hiện */}
+                        <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                            Thời gian thực hiện
+                          </label>
+                          <input
+                            type="text"
+                            value={doc.budgetEstimate?.implementationTime || 'Quý IV năm 2026'}
+                            onChange={(e) => handleUpdateBudgetField('implementationTime', e.target.value)}
+                            placeholder="Quý IV năm 2026..."
+                            className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg focus:border-amber-600 focus:ring-1 focus:ring-amber-200"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1">Ghi nhận tại Khoản 5 Điều 1</p>
+                        </div>
+
+                        {/* Đơn vị thực hiện */}
+                        <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                            Đơn vị chủ trì thực hiện
+                          </label>
+                          <input
+                            type="text"
+                            value={doc.budgetEstimate?.implementingUnit || 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan'}
+                            onChange={(e) => handleUpdateBudgetField('implementingUnit', e.target.value)}
+                            placeholder="Phòng Kế hoạch Tài chính chủ trì..."
+                            className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg focus:border-amber-600 focus:ring-1 focus:ring-amber-200"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1">Ghi nhận tại Khoản 2 Điều 1</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* KHỐI 2: BẢNG DỰ TOÁN KINH PHÍ CHI TIẾT (PHỤ LỤC) */}
+                    <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-300 shadow-2xs space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-5 h-5 rounded-md bg-slate-900 text-amber-400 font-bold text-[10px] flex items-center justify-center">2</span>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
+                            2. Bảng dự toán kinh phí chi tiết (Kèm Phụ lục Quyết định)
+                          </h4>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={handleResetBudgetItems}
+                            className="text-[11px] text-slate-500 hover:text-slate-800 font-medium px-2 py-1 rounded hover:bg-slate-100 transition cursor-pointer"
+                            title="Khôi phục 5 mục dự toán mặc định"
+                          >
+                            Khôi phục mẫu
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddBudgetItem}
+                            className="inline-flex items-center text-[11px] font-semibold text-white bg-slate-900 hover:bg-slate-800 px-2.5 py-1 rounded-lg shadow-2xs transition cursor-pointer"
+                          >
+                            <i className="fa-solid fa-plus text-[10px] mr-1 text-amber-400"></i>
+                            Thêm dòng chi phí
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Bảng tương tác */}
+                      <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100/80 text-slate-700 text-[11px] font-bold border-b border-slate-200">
+                              <th className="p-2 w-10 text-center">STT</th>
+                              <th className="p-2 min-w-[200px]">Nội dung chi</th>
+                              <th className="p-2 w-16 text-center">ĐVT</th>
+                              <th className="p-2 w-16 text-center">Số lượng</th>
+                              <th className="p-2 w-28 text-right">Đơn giá (đ)</th>
+                              <th className="p-2 w-28 text-right">Thành tiền (đ)</th>
+                              <th className="p-2 w-10 text-center">Xóa</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {(doc.budgetEstimate?.items || DEFAULT_BUDGET_ITEMS).map((item, idx) => {
+                              const qty = Number(item.quantity) || 0;
+                              const price = Number(item.unitPrice) || 0;
+                              const amount = Number(item.amount) || qty * price;
+                              return (
+                                <tr key={item.id || idx} className="hover:bg-amber-50/30 transition">
+                                  <td className="p-1.5 text-center font-bold text-slate-500 text-[11px]">
+                                    {item.stt || idx + 1}
+                                  </td>
+                                  <td className="p-1.5">
+                                    <input
+                                      type="text"
+                                      value={item.content}
+                                      onChange={(e) => handleUpdateBudgetItem(idx, 'content', e.target.value)}
+                                      placeholder="Nội dung khoản mục chi..."
+                                      className="w-full text-xs px-2 py-1 rounded border border-slate-200 focus:border-amber-600 focus:ring-1 focus:ring-amber-200"
+                                    />
+                                  </td>
+                                  <td className="p-1.5 text-center">
+                                    <input
+                                      type="text"
+                                      value={item.unit}
+                                      onChange={(e) => handleUpdateBudgetItem(idx, 'unit', e.target.value)}
+                                      placeholder="Bộ"
+                                      className="w-14 text-center text-xs px-1 py-1 rounded border border-slate-200 focus:border-amber-600 focus:ring-1 focus:ring-amber-200"
+                                    />
+                                  </td>
+                                  <td className="p-1.5 text-center">
+                                    <input
+                                      type="number"
+                                      value={item.quantity}
+                                      onChange={(e) => handleUpdateBudgetItem(idx, 'quantity', e.target.value)}
+                                      className="w-14 text-center text-xs px-1 py-1 rounded border border-slate-200 focus:border-amber-600 focus:ring-1 focus:ring-amber-200 font-mono"
+                                    />
+                                  </td>
+                                  <td className="p-1.5 text-right">
+                                    <input
+                                      type="number"
+                                      value={item.unitPrice}
+                                      onChange={(e) => handleUpdateBudgetItem(idx, 'unitPrice', e.target.value)}
+                                      className="w-24 text-right text-xs px-1 py-1 rounded border border-slate-200 focus:border-amber-600 focus:ring-1 focus:ring-amber-200 font-mono"
+                                    />
+                                  </td>
+                                  <td className="p-1.5 text-right font-mono font-bold text-slate-800 text-[11px]">
+                                    {new Intl.NumberFormat('vi-VN').format(amount)}
+                                  </td>
+                                  <td className="p-1.5 text-center">
+                                    {(doc.budgetEstimate?.items || DEFAULT_BUDGET_ITEMS).length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveBudgetItem(idx)}
+                                        className="text-slate-400 hover:text-amber-800 p-1 rounded hover:bg-slate-100 transition cursor-pointer"
+                                        title="Xóa dòng chi này"
+                                      >
+                                        <i className="fa-solid fa-xmark text-xs"></i>
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                          <tfoot>
+                            <tr className="bg-slate-50/90 font-bold border-t-2 border-slate-300 text-xs">
+                              <td colSpan={5} className="p-2.5 text-right uppercase tracking-wider text-slate-700">
+                                Tổng cộng:
+                              </td>
+                              <td className="p-2.5 text-right font-mono text-amber-900 text-xs font-bold">
+                                {formatVND(doc.budgetEstimate?.totalAmount || 0)}
+                              </td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+
+                      <div className="p-2.5 bg-amber-50/60 rounded-lg border border-amber-200/80 text-[11px] text-amber-900 flex items-center justify-between">
+                        <span className="italic">
+                          Số tiền bằng chữ: <strong>{doc.budgetEstimate?.totalAmountWords || numberToVietnameseWords(doc.budgetEstimate?.totalAmount || 0)}</strong>
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {(doc.budgetEstimate?.items || DEFAULT_BUDGET_ITEMS).length} khoản mục chi
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* KHUNG CHAT TRỢ LÝ AI ĐẶT NGAY DƯỚI BẢNG DỰ TOÁN */}
+                    <div id="ai-chat-prompt-box" className="pt-1">
+                      <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 border border-amber-200/80 rounded-2xl p-3 shadow-2xs space-y-2 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-100 transition-all">
+                        <div className="flex items-center justify-between px-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="w-5 h-5 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-[10px] shadow-xs">
+                              <i className="fa-solid fa-wand-magic-sparkles"></i>
+                            </span>
+                            <span className="text-xs font-bold text-slate-800 tracking-tight">
+                              Trợ lý AI - Viết lại toàn bộ &amp; Tinh chỉnh dự toán
+                            </span>
+                            <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                              Gemini AI • Quyết định dự toán
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-medium hidden md:inline">
+                            Nhấn Enter để gửi lệnh
+                          </span>
+                        </div>
+
+                        <div className="relative flex items-center bg-white rounded-xl border border-slate-300 shadow-2xs pl-3 pr-1.5 py-1 focus-within:border-amber-600 transition">
+                          <textarea
+                            rows={2}
+                            value={aiCustomPrompt}
+                            onChange={(e) => setAiCustomPrompt(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey && !isProcessingAI) {
+                                e.preventDefault();
+                                handleCallAI('quyetdinh_dutoan');
+                              }
+                            }}
+                            placeholder="Nhập yêu cầu để AI tự động phân bổ dự toán, cơ cấu các khoản chi và lập chuẩn 3 Điều Quyết định (VD: Lập dự toán nhiệm vụ khảo sát châu Âu tổng 900 triệu gồm vé máy bay, khách sạn, visa...)"
+                            className="w-full text-xs text-slate-800 placeholder:text-slate-400 placeholder:italic outline-none resize-none font-normal leading-relaxed custom-scrollbar py-1"
+                          />
+
+                          <div className="flex items-center space-x-1 shrink-0 ml-2">
+                            {aiCustomPrompt && !isProcessingAI && (
+                              <button
+                                type="button"
+                                onClick={() => setAiCustomPrompt('')}
+                                className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer text-xs"
+                                title="Xóa yêu cầu"
+                              >
+                                <i className="fa-solid fa-xmark"></i>
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              disabled={isProcessingAI}
+                              onClick={() => handleCallAI('quyetdinh_dutoan')}
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                isProcessingAI
+                                  ? 'bg-amber-600 text-white'
+                                  : aiCustomPrompt.trim()
+                                  ? 'bg-amber-700 hover:bg-amber-800 text-white shadow-amber-700/20 ring-1 ring-amber-600'
+                                  : 'bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700'
+                              }`}
+                              title={isProcessingAI ? 'Đang soạn thảo...' : 'Gửi yêu cầu tới Trợ lý AI (Enter)'}
+                            >
+                              {isProcessingAI ? (
+                                <i className="fa-solid fa-spinner fa-spin text-xs"></i>
+                              ) : (
+                                <i className="fa-solid fa-paper-plane text-xs"></i>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {isProcessingAI && (
+                          <div className="flex items-center space-x-2 text-[11px] text-amber-800 font-semibold px-2 animate-pulse">
+                            <i className="fa-solid fa-spinner fa-spin text-amber-600 text-xs"></i>
+                            <span>Trợ lý AI đang phân tích toàn văn và soạn thảo đồng bộ...</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* TÙY CHỈNH NỘI DUNG ĐIỀU 2 & ĐIỀU 3 (ACCORDION THU GỌN) */}
+                    <details className="group bg-slate-50/70 rounded-xl border border-slate-200 p-3 sm:p-3.5 transition-all">
+                      <summary className="flex items-center justify-between cursor-pointer select-none text-xs font-bold text-slate-800">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-700 font-bold text-[10px] flex items-center justify-center">
+                            <i className="fa-solid fa-sliders text-[10px]"></i>
+                          </span>
+                          <span>Tùy chỉnh nội dung Điều 2 &amp; Điều 3 (Tổ chức thực hiện &amp; Hiệu lực thi hành)</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] text-slate-500 font-normal group-open:hidden">
+                            Nhấn để xem / chỉnh sửa
+                          </span>
+                          <i className="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200 group-open:rotate-180"></i>
+                        </div>
+                      </summary>
+
+                      <div className="pt-3 mt-2 border-t border-slate-200 space-y-3">
+                        {/* Điều 2 */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-slate-800">
+                              Điều 2. Trách nhiệm tổ chức thực hiện
+                            </label>
+                            <span className="text-[10px] text-slate-400">Giao KHTC quản lý, thanh quyết toán &amp; phối hợp</span>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={doc.budgetEstimate?.customArticle2 ?? DEFAULT_ARTICLE_2}
+                            onChange={(e) => handleUpdateBudgetField('customArticle2', e.target.value)}
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed bg-white"
+                          />
+                        </div>
+
+                        {/* Điều 3 */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-slate-800">
+                              Điều 3. Điều khoản thi hành
+                            </label>
+                            <span className="text-[10px] text-slate-400">Hiệu lực từ ngày ký &amp; đơn vị thi hành</span>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={doc.budgetEstimate?.customArticle3 ?? DEFAULT_ARTICLE_3}
+                            onChange={(e) => handleUpdateBudgetField('customArticle3', e.target.value)}
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed bg-white"
+                          />
+                        </div>
+
+                        {/* Nút khôi phục mặc định Điều 2 & 3 */}
+                        <div className="flex justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUpdateBudgetField('customArticle2', DEFAULT_ARTICLE_2);
+                              handleUpdateBudgetField('customArticle3', DEFAULT_ARTICLE_3);
+                              onNotify('Đã khôi phục Điều 2 và Điều 3 về văn bản mẫu chuẩn của Trung tâm.');
+                            }}
+                            className="text-[11px] text-slate-600 hover:text-slate-900 font-semibold px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-300 transition cursor-pointer"
+                          >
+                            <i className="fa-solid fa-rotate-left mr-1 text-[10px]"></i>
+                            Khôi phục mẫu Điều 2 &amp; 3 chuẩn
+                          </button>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                ) : isPhieuTrinh && phieuTrinhViewMode === 'structured' ? (
                   /* ========================================================= */
                   /* KHUNG SOẠN THẢO CẤU TRÚC CHI TIẾT CHO PHIẾU TRÌNH         */
                   /* ========================================================= */
@@ -1335,22 +1962,24 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                 </div>
               )}
 
-              {/* Đoạn kết thúc công văn */}
-              <div className="pt-1">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
-                  Đoạn kết luận &amp; Đề nghị phối hợp
-                </label>
-                <textarea
-                  rows={2}
-                  value={doc.closing}
-                  onChange={(e) => onUpdateField('closing', e.target.value)}
-                  className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 focus:ring-amber-200"
-                />
-              </div>
-              {/* ============================================================== */}
-              {/* KHUNG CHAT COMMAND AI TINH GỌN DƯỚI CÙNG (CHAT PROMPT BOX)    */}
-              {/* ============================================================== */}
-              <div className="pt-3 border-t border-slate-200" id="ai-chat-prompt-box">
+              {/* Đoạn kết thúc công văn & Khung chat dưới cùng (Chỉ hiển thị cho Công văn / Phiếu trình, Quyết định dự toán đã có khung AI riêng ở trên) */}
+              {!isQuyetDinhDuToan && (
+                <>
+                  <div className="pt-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                      Đoạn kết luận &amp; Đề nghị phối hợp
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={doc.closing}
+                      onChange={(e) => onUpdateField('closing', e.target.value)}
+                      className="w-full text-xs rounded-lg border-gray-300 focus:border-amber-600 focus:ring-amber-200"
+                    />
+                  </div>
+                  {/* ============================================================== */}
+                  {/* KHUNG CHAT COMMAND AI TINH GỌN DƯỚI CÙNG (CHAT PROMPT BOX)    */}
+                  {/* ============================================================== */}
+                  <div className="pt-3 border-t border-slate-200" id="ai-chat-prompt-box">
                 <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 border border-amber-200/80 rounded-2xl p-3 shadow-2xs space-y-2 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-100 transition-all">
                   <div className="flex items-center justify-between px-1">
                     <div className="flex items-center space-x-2">
@@ -1361,7 +1990,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         Trợ lý AI - Viết lại toàn bộ &amp; Tinh chỉnh
                       </span>
                       <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 hidden sm:inline">
-                        {isPhieuTrinh ? 'Gemini AI • Phiếu trình NĐ 30' : 'Gemini AI • Nghị định 30'}
+                        {isQuyetDinhDuToan ? 'Gemini AI • Quyết định dự toán' : isPhieuTrinh ? 'Gemini AI • Phiếu trình NĐ 30' : 'Gemini AI • Nghị định 30'}
                       </span>
                     </div>
                     <span className="text-[10px] text-slate-400 font-medium hidden md:inline">
@@ -1377,11 +2006,13 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey && !isProcessingAI) {
                           e.preventDefault();
-                          handleCallAI(isPhieuTrinh ? 'phieutrinh' : 'standardize');
+                          handleCallAI(isQuyetDinhDuToan ? 'quyetdinh_dutoan' : isPhieuTrinh ? 'phieutrinh' : 'standardize');
                         }
                       }}
                       placeholder={
-                        isPhieuTrinh
+                        isQuyetDinhDuToan
+                          ? "Nhập yêu cầu để AI tự động phân bổ dự toán, cơ cấu các khoản chi và lập chuẩn 3 Điều Quyết định (VD: Lập dự toán 150 triệu cho nhiệm vụ nâng cấp hệ thống máy chủ, gồm chi phí chuyên gia, máy chủ và đào tạo...)"
+                          : isPhieuTrinh
                           ? "Nhập yêu cầu để AI tự động phân bổ vào 4 nhánh Mục 1 và 2 nhánh Mục 3 của Phiếu trình (VD: Ghi nhận kết quả thẩm định ngày 20/10, tiến độ đúng hạn và kiến nghị Lãnh đạo ký ban hành...)"
                           : "Nhập yêu cầu để AI viết lại toàn bộ hoặc tinh chỉnh (VD: Viết lại toàn bộ công văn theo hướng khẩn trương, bổ sung căn cứ pháp lý và thời hạn bàn giao...)"
                       }
@@ -1403,7 +2034,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       <button
                         type="button"
                         disabled={isProcessingAI}
-                        onClick={() => handleCallAI(isPhieuTrinh ? 'phieutrinh' : 'standardize')}
+                        onClick={() => handleCallAI(isQuyetDinhDuToan ? 'quyetdinh_dutoan' : isPhieuTrinh ? 'phieutrinh' : 'standardize')}
                         className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                           isProcessingAI
                             ? 'bg-amber-600 text-white'
@@ -1430,6 +2061,8 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   )}
                 </div>
               </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1461,11 +2094,13 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               </div>
               <div className="text-left">
                 <h2 className="text-sm font-bold text-gray-800">
-                  {isPhieuTrinh ? 'Đơn vị trình & Cán bộ ký xác nhận' : 'Nơi nhận & Thẩm quyền ký duyệt'}
+                  {isPhieuTrinh ? 'Đơn vị trình & Cán bộ ký xác nhận' : isQuyetDinhDuToan ? 'Thẩm quyền ký Quyết định & Cán bộ ký Phụ lục dự toán' : 'Nơi nhận & Thẩm quyền ký duyệt'}
                 </h2>
                 <p className="text-xs text-gray-500">
                   {isPhieuTrinh
                     ? `Chuyên viên & Trưởng phòng: ${doc.departmentHeadName || 'Nguyễn Đắc Minh'} • Nơi nhận: Lãnh đạo Trung tâm`
+                    : isQuyetDinhDuToan
+                    ? `Giám đốc ${doc.signerName || 'Bùi Bá Chính'} • Người lập biểu & Trưởng phòng KHTC ${doc.departmentHeadName || 'Nguyễn Đắc Minh'}`
                     : `${doc.signerRole} ${doc.signerName} • ${doc.distributionList.length} địa chỉ nơi nhận mặc định`}
                 </p>
               </div>
@@ -1532,6 +2167,64 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       <p className="text-[10px] text-gray-400 mt-1.5">
                         Mặc định hiển thị: <strong className="text-slate-700">Nguyễn Đắc Minh</strong> (có thể chỉnh sửa khi cần)
                       </p>
+                    </div>
+                  </div>
+                </div>
+              ) : isQuyetDinhDuToan ? (
+                /* QUYẾT ĐỊNH DỰ TOÁN */
+                <div className="space-y-4">
+                  <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2">
+                      <i className="fa-solid fa-circle-info text-amber-600 shrink-0"></i>
+                      <span>
+                        Quyết định do Giám đốc ký ban hành. Phụ lục dự toán do Người lập biểu và Trưởng phòng Phòng KHTC ký xác nhận.
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-amber-200 shadow-2xs shrink-0 self-start sm:self-auto">
+                      Ký duyệt 2 cấp: Quyết định &amp; Phụ lục
+                    </span>
+                  </div>
+
+                  {/* Phần 1: Ký Quyết định & Nơi nhận */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-200 space-y-2">
+                      <label className="block text-xs font-bold text-slate-800">
+                        Thẩm quyền &amp; Người ký Quyết định (Trang chính)
+                      </label>
+                      <div>
+                        <label className="block text-[10px] text-slate-500 mb-0.5">Chức vụ ký</label>
+                        <input
+                          type="text"
+                          value={doc.signerRole || 'GIÁM ĐỐC'}
+                          onChange={(e) => onUpdateField('signerRole', e.target.value)}
+                          className="w-full text-xs rounded-lg font-bold bg-white border border-gray-300 text-gray-900 px-3 py-1.5"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-500 mb-0.5">Họ và tên người ký</label>
+                        <input
+                          type="text"
+                          value={doc.signerName || 'Bùi Bá Chính'}
+                          onChange={(e) => onUpdateField('signerName', e.target.value)}
+                          className="w-full text-xs rounded-lg font-bold bg-white border border-gray-300 text-gray-900 px-3 py-1.5"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-200 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-slate-800">
+                          Danh sách nơi nhận Quyết định
+                        </label>
+                        <span className="text-[10px] text-slate-500">Mỗi dòng 1 nơi nhận</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={(doc.distributionList || []).join('\n')}
+                        onChange={(e) => onUpdateField('distributionList', e.target.value.split('\n').filter(Boolean))}
+                        className="w-full text-xs rounded-lg bg-white border border-gray-300 text-gray-900 px-3 py-1.5 resize-none font-mono"
+                      />
+                      <p className="text-[10px] text-slate-400">Mặc định: - Như Điều 3; - Ban Giám đốc; - Lưu: VT, KHTC.</p>
                     </div>
                   </div>
                 </div>

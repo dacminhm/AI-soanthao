@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { DocumentState, formatAttachedDocuments } from '../utils/decree30Rules.ts';
+import {
+  DocumentState,
+  formatAttachedDocuments,
+  DEFAULT_BUDGET_ITEMS,
+  DEFAULT_ARTICLE_2,
+  DEFAULT_ARTICLE_3,
+  formatVND,
+  numberToVietnameseWords,
+} from '../utils/decree30Rules.ts';
 
 interface A4PreviewProps {
   document: DocumentState;
@@ -57,6 +65,23 @@ export const A4Preview: React.FC<A4PreviewProps> = ({ document: doc }) => {
     doc.docType?.toLowerCase().includes('phiếu trình') ||
     doc.docType?.toLowerCase().includes('phieutrinh') ||
     doc.docType === 'phieutrinh';
+
+  // Check if current document is Quyet Dinh Phe Duyet Du Toan
+  const isQuyetDinhDuToan =
+    doc.docType?.toLowerCase().includes('dự toán') ||
+    doc.docType?.toLowerCase().includes('dutoan') ||
+    doc.docType === 'quyetdinh_dutoan';
+
+  const budgetItems = doc.budgetEstimate?.items && doc.budgetEstimate.items.length > 0
+    ? doc.budgetEstimate.items
+    : DEFAULT_BUDGET_ITEMS;
+
+  const calculatedBudgetTotal = budgetItems.reduce(
+    (sum, it) => sum + (Number(it.amount) || (Number(it.quantity) || 0) * (Number(it.unitPrice) || 0)),
+    0
+  );
+  const budgetTotalAmount = doc.budgetEstimate?.totalAmount || calculatedBudgetTotal;
+  const budgetWords = doc.budgetEstimate?.totalAmountWords || numberToVietnameseWords(budgetTotalAmount);
 
   // Format subject without duplicate V/v
   const displaySubject = doc.subject.replace(/^V\/v\s*:?\s*/i, '');
@@ -196,6 +221,103 @@ Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, c
     );
   };
 
+  /**
+   * Render Legal bases for Quyết định phê duyệt dự toán
+   */
+  const renderQuyetDinhLegalBases = () => {
+    const bases = doc.legalBases && doc.legalBases.length > 0
+      ? doc.legalBases
+      : [
+          'Luật Ngân sách nhà nước số 83/2015/QH13 ngày 25 tháng 6 năm 2015',
+          'Nghị định số 30/2020/NĐ-CP ngày 05 tháng 3 năm 2020 của Chính phủ về công tác văn thư',
+          'Quyết định số 128/QĐ-TĐC ngày 28 tháng 02 năm 2024 của Tổng cục Tiêu chuẩn Đo lường Chất lượng quy định chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Trung tâm Mã số, mã vạch Quốc gia',
+          'Quyết định giao quyền tự chủ tài chính cho Trung tâm Mã số, mã vạch Quốc gia',
+          'Theo đề nghị của Trưởng phòng Phòng Kế hoạch Tài chính',
+        ];
+
+    return (
+      <div className="space-y-1 my-2.5 text-justify select-text">
+        {bases.map((base, idx) => {
+          let clean = base.trim();
+          if (!clean.startsWith('Căn cứ') && !clean.startsWith('Theo')) {
+            clean = `Căn cứ ${clean}`;
+          }
+          const isLast = idx === bases.length - 1;
+          clean = clean.replace(/[;.]+$/, '') + (isLast ? '.' : ';');
+
+          return (
+            <p key={idx} style={{ textIndent: '1.27cm', fontSize: '14.5px', lineHeight: '1.4' }} className="italic text-black text-justify">
+              {clean}
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+
+  /**
+   * Render Body of Quyết định (3 Điều) - Tự động sinh dựa trên thông số (Single Source of Truth)
+   */
+  const renderQuyetDinhContent = () => {
+    const taskName = doc.budgetEstimate?.taskName || doc.subject || 'nhiệm vụ chuyên môn năm 2026';
+    const implementingUnit = doc.budgetEstimate?.implementingUnit || 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan';
+    const fundingSource = doc.budgetEstimate?.fundingSource || 'Nguồn thu hoạt động sự nghiệp của Trung tâm';
+    const implementationTime = doc.budgetEstimate?.implementationTime || 'Quý IV năm 2026';
+    const article2Text = doc.budgetEstimate?.customArticle2 || DEFAULT_ARTICLE_2;
+    const article3Text = doc.budgetEstimate?.customArticle3 || DEFAULT_ARTICLE_3;
+
+    return (
+      <div style={{ fontSize: '15px', lineHeight: '1.45' }} className="space-y-1.5 text-black text-justify select-text whitespace-pre-line">
+        {/* Điều 1: Ghép chuỗi chuẩn xác từ các ô thông số */}
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed mt-2.5 mb-1 text-justify">
+          <strong>Điều 1.</strong> Phê duyệt kèm theo Quyết định này dự toán chi tiết thực hiện nhiệm vụ: "{taskName}" với các nội dung chủ yếu sau:
+        </p>
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+          1. Tên nhiệm vụ: {taskName}.
+        </p>
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+          2. Đơn vị thực hiện: {implementingUnit}.
+        </p>
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+          3. Tổng kinh phí phê duyệt: <strong>{new Intl.NumberFormat('vi-VN').format(budgetTotalAmount)} đồng</strong> (Bằng chữ: <em>{budgetWords}</em>).
+        </p>
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed italic text-gray-800 text-justify">
+          (Chi tiết tại Phụ lục kèm theo Quyết định này).
+        </p>
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+          4. Nguồn kinh phí: {fundingSource}.
+        </p>
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+          5. Thời gian thực hiện: {implementationTime}.
+        </p>
+
+        {/* Điều 2: Trách nhiệm tổ chức thực hiện */}
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed mt-3 mb-1 text-justify">
+          <strong>Điều 2.</strong> Trách nhiệm tổ chức thực hiện
+        </p>
+        {article2Text.split('\n').map((line, lIdx) => (
+          line.trim() && (
+            <p key={lIdx} style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+              {line.trim()}
+            </p>
+          )
+        ))}
+
+        {/* Điều 3: Điều khoản thi hành */}
+        <p style={{ textIndent: '1.27cm' }} className="leading-relaxed mt-3 mb-1 text-justify">
+          <strong>Điều 3.</strong> Điều khoản thi hành
+        </p>
+        {article3Text.split('\n').map((line, lIdx) => (
+          line.trim() && (
+            <p key={lIdx} style={{ textIndent: '1.27cm' }} className="leading-relaxed text-justify">
+              {line.trim()}
+            </p>
+          )
+        ))}
+      </div>
+    );
+  };
+
   return (
     <section
       className="w-full h-full bg-slate-200/95 border-r border-slate-300 flex flex-col relative z-10 shrink-0 overflow-hidden"
@@ -206,7 +328,7 @@ Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, c
         <div className="flex items-center space-x-2">
           <span className="font-bold text-gray-800 flex items-center">
             <i className="fa-solid fa-print text-slate-700 mr-1.5"></i>
-            Xem trước bản in A4 {isPhieuTrinh ? '(Phiếu trình)' : '(Công văn)'}
+            Xem trước bản in A4 {isPhieuTrinh ? '(Phiếu trình)' : isQuyetDinhDuToan ? '(Quyết định dự toán)' : '(Công văn)'}
           </span>
           <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 font-mono hidden xl:inline-block">
             {actualHeight > A4_MIN_HEIGHT_PX ? `Đa trang (~ ${Math.ceil(actualHeight / A4_MIN_HEIGHT_PX)} trang)` : 'Khổ A4: 210 x 297mm'}
@@ -449,6 +571,169 @@ Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, c
                   </p>
                 </div>
               </div>
+            ) : isQuyetDinhDuToan ? (
+              /* ========================================================================= */
+              /* LAYOUT DÀNH CHO QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN KÈM PHỤ LỤC CHI TIẾT        */
+              /* ========================================================================= */
+              <div>
+                {/* 1. Header 2 Cột */}
+                <div className="w-full flex justify-between items-start text-center pb-2">
+                  {/* Left Column (44%) */}
+                  <div style={{ width: '44%' }} className="text-center leading-snug shrink-0">
+                    <div style={{ fontSize: '13px', lineHeight: '1.25' }} className="uppercase font-normal text-black text-center select-text">
+                      <div>ỦY BAN TIÊU CHUẨN</div>
+                      <div>ĐO LƯỜNG CHẤT LƯỢNG QUỐC GIA</div>
+                    </div>
+                    <div style={{ fontSize: '13px', lineHeight: '1.25' }} className="font-bold uppercase text-black mt-1 text-center select-text">
+                      <div>TRUNG TÂM MÃ SỐ,</div>
+                      <div>MÃ VẠCH QUỐC GIA</div>
+                    </div>
+                    <div className="w-24 mx-auto border-b-2 border-black mt-1 mb-1"></div>
+                    <p style={{ fontSize: '14.5px' }} className="mt-1 leading-tight text-black">
+                      Số: <span>{doc.docNumber || '...'}</span>
+                      <span>{doc.docSymbol || '/QĐ-MSMV'}</span>
+                    </p>
+                  </div>
+
+                  {/* Right Column (56%) */}
+                  <div style={{ width: '56%' }} className="text-center leading-snug pl-2 shrink-0">
+                    <p style={{ fontSize: '13.5px', letterSpacing: '-0.2px' }} className="font-bold uppercase whitespace-nowrap text-black text-center">
+                      CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+                    </p>
+                    <p style={{ fontSize: '14.5px' }} className="font-bold text-black mt-1 text-center">
+                      Độc lập - Tự do - Hạnh phúc
+                    </p>
+                    <div className="w-36 mx-auto border-b-2 border-black mt-1 mb-1"></div>
+                    <p style={{ fontSize: '14px', textAlign: 'center' }} className="italic text-center text-black mt-1.5">
+                      {doc.placeDate || 'Hà Nội, ngày ... tháng ... năm 2026'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Tiêu đề Quyết định */}
+                <div className="text-center mt-3 mb-2">
+                  <p style={{ fontSize: '17px' }} className="font-bold uppercase tracking-wide text-black">
+                    QUYẾT ĐỊNH
+                  </p>
+                  <p style={{ fontSize: '15px' }} className="font-bold text-black mt-1">
+                    Về việc phê duyệt dự toán chi tiết thực hiện nhiệm vụ:
+                  </p>
+                  <p style={{ fontSize: '15px' }} className="font-bold text-slate-900 mt-0.5">
+                    "{doc.budgetEstimate?.taskName || doc.subject}"
+                  </p>
+                  <p style={{ fontSize: '14.5px' }} className="font-bold uppercase text-black mt-2.5 mb-2">
+                    {(doc.signerRole && doc.signerRole.includes('GIÁM ĐỐC') ? doc.signerRole : 'GIÁM ĐỐC TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA').toUpperCase()}
+                  </p>
+                </div>
+
+                {/* 3. Căn cứ pháp lý */}
+                {renderQuyetDinhLegalBases()}
+
+                {/* 4. Cụm từ QUYẾT ĐỊNH: */}
+                <div className="text-center my-3">
+                  <p style={{ fontSize: '15px' }} className="font-bold uppercase tracking-wider text-black">
+                    QUYẾT ĐỊNH:
+                  </p>
+                </div>
+
+                {/* 5. Thân Quyết định (3 Điều) */}
+                {renderQuyetDinhContent()}
+
+                {/* 6. Khối chữ ký và nơi nhận Quyết định */}
+                <div style={{ marginTop: '16px' }} className="w-full flex justify-between items-start pt-2">
+                  {/* Nơi nhận (45%) */}
+                  <div style={{ width: '45%' }} className="text-left leading-normal">
+                    <p style={{ fontSize: '14px' }} className="font-bold italic text-black">
+                      Nơi nhận:
+                    </p>
+                    <div style={{ fontSize: '13px', lineHeight: '1.35' }} className="space-y-0.5 mt-1 font-normal text-black">
+                      {(doc.distributionList && doc.distributionList.length > 0
+                        ? doc.distributionList
+                        : ['- Như Điều 3;', '- Ban Giám đốc;', '- Lưu: VT, KHTC.']
+                      ).map((item, idx) => (
+                        <p key={idx}>{item}</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Giám đốc ký (55%) */}
+                  <div style={{ width: '55%' }} className="text-center leading-normal">
+                    <p style={{ fontSize: '15px' }} className="font-bold uppercase text-black">
+                      GIÁM ĐỐC
+                    </p>
+                    <div className="h-20 flex items-center justify-center relative my-1">
+                      <div className="w-20 h-20 rounded-full border-2 border-amber-700/40 flex items-center justify-center -rotate-12 text-[10px] text-amber-800/50 font-bold uppercase select-none pointer-events-none">
+                        (DẤU CƠ QUAN)
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '15px' }} className="font-bold text-black">
+                      {doc.signerName || 'Bùi Bá Chính'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 7. PHỤ LỤC DỰ TOÁN KINH PHÍ CHI TIẾT */}
+                <div className="my-8 pt-6 border-t-2 border-dashed border-slate-300">
+                  <div className="text-center mb-3">
+                    <p style={{ fontSize: '15px' }} className="font-bold uppercase text-black">
+                      PHỤ LỤC
+                    </p>
+                    <p style={{ fontSize: '16px' }} className="font-bold uppercase tracking-wide text-black mt-0.5">
+                      DỰ TOÁN KINH PHÍ CHI TIẾT
+                    </p>
+                    <p style={{ fontSize: '13px' }} className="italic text-gray-700 mt-1">
+                      (Kèm theo Quyết định số: {doc.docNumber || '...    '}{doc.docSymbol || '/QĐ-MSMV'} ngày ... của Giám đốc Trung tâm Mã số, mã vạch Quốc gia)
+                    </p>
+                  </div>
+
+                  <div style={{ fontSize: '14.5px' }} className="text-left space-y-1 mb-3 text-black">
+                    <p><strong>Tên nhiệm vụ:</strong> {doc.budgetEstimate?.taskName || doc.subject}</p>
+                    <p><strong>Đơn vị thực hiện:</strong> {doc.budgetEstimate?.implementingUnit || 'Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan'}</p>
+                  </div>
+
+                  {/* Bảng dự toán 6 cột - Căn chỉnh khoảng đệm đẹp mắt, không dính viền */}
+                  <table className="w-full border-collapse border border-black text-[13px] text-black my-3 leading-normal">
+                    <thead>
+                      <tr className="bg-slate-100 font-bold text-center">
+                        <th className="border border-black px-2 py-2 w-10 text-center">STT</th>
+                        <th className="border border-black px-3 py-2 text-left">Nội dung chi</th>
+                        <th className="border border-black px-2 py-2 w-16 text-center">ĐVT</th>
+                        <th className="border border-black px-2 py-2 w-16 text-center">Số lượng</th>
+                        <th className="border border-black px-2.5 py-2 w-32 text-right pr-3">Đơn giá (đồng)</th>
+                        <th className="border border-black px-2.5 py-2 w-36 text-right pr-3">Thành tiền (đồng)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {budgetItems.map((item, idx) => (
+                        <tr key={item.id || idx}>
+                          <td className="border border-black px-2 py-2 text-center align-middle">{item.stt || idx + 1}</td>
+                          <td className="border border-black px-3 py-2 text-left leading-snug align-middle">{item.content}</td>
+                          <td className="border border-black px-2 py-2 text-center align-middle">{item.unit}</td>
+                          <td className="border border-black px-2 py-2 text-center align-middle font-mono">{item.quantity}</td>
+                          <td className="border border-black px-2.5 py-2 text-right font-mono pr-3 align-middle">
+                            {new Intl.NumberFormat('vi-VN').format(item.unitPrice)}
+                          </td>
+                          <td className="border border-black px-2.5 py-2 text-right font-mono font-bold pr-3 align-middle">
+                            {new Intl.NumberFormat('vi-VN').format(item.amount || (item.quantity * item.unitPrice))}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="font-bold bg-slate-50">
+                        <td colSpan={5} className="border border-black px-3 py-2 text-center font-bold uppercase tracking-wide">
+                          Tổng cộng
+                        </td>
+                        <td className="border border-black px-2.5 py-2 text-right font-mono font-bold text-[13.5px] pr-3">
+                          {new Intl.NumberFormat('vi-VN').format(budgetTotalAmount)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <p style={{ fontSize: '13.5px' }} className="italic text-left mt-2.5 mb-4 text-black leading-relaxed">
+                    (Bằng chữ: {budgetWords.replace(/[\s./;]+$/, '')}./.)
+                  </p>
+                </div>
+              </div>
             ) : (
               /* ========================================================================= */
               /* LAYOUT TIÊU CHUẨN CÔNG VĂN ĐI THEO NGHỊ ĐỊNH 30/2020/NĐ-CP                 */
@@ -650,6 +935,8 @@ Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, c
         <span>
           {isPhieuTrinh
             ? 'Mẫu Phiếu trình giải quyết công việc nội bộ theo quy định quản lý văn thư'
+            : isQuyetDinhDuToan
+            ? 'Mẫu Quyết định phê duyệt dự toán kèm Phụ lục chi tiết theo chuẩn Trung tâm MSMV & NĐ 30'
             : 'Trang in đạt chuẩn kỹ thuật trình bày theo Phụ lục I - Nghị định số 30/2020/NĐ-CP'}
         </span>
       </div>

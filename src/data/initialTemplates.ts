@@ -14,6 +14,7 @@ export interface AdministrativeTemplate {
   defaultSignerRole: string;
   defaultContent?: string;
   attachedDocuments?: string[];
+  budgetEstimate?: any;
 }
 
 export interface StoredDraft {
@@ -21,7 +22,7 @@ export interface StoredDraft {
   title: string;
   docNumber: string;
   docSymbol: string;
-  category: 'congvan' | 'totrinh' | 'thongbao' | 'quyetdinh' | 'phieutrinh';
+  category: 'congvan' | 'totrinh' | 'thongbao' | 'quyetdinh' | 'phieutrinh' | 'quyetdinh_dutoan';
   categoryLabel: string;
   updatedAt: string;
   author: string;
@@ -42,6 +43,7 @@ export interface StoredDraft {
   placeDate?: string;
   webViewLink?: string;
   attachedDocuments?: string[];
+  budgetEstimate?: any;
 }
 
 export const INITIAL_TEMPLATES: AdministrativeTemplate[] = [
@@ -105,6 +107,41 @@ Nội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn v�
 a) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]
 b) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]
 Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`,
+  },
+  {
+    id: 'quyetdinh_dutoan',
+    name: 'QUYẾT ĐỊNH PHÊ DUYỆT DỰ TOÁN',
+    code: '/QĐ-MSMV',
+    status: 'active',
+    statusLabel: 'Mặc định • Chuẩn hóa',
+    parentAgency: 'ỦY BAN TIÊU CHUẨN ĐO LƯỜNG CHẤT LƯỢNG QUỐC GIA',
+    issuingAgency: 'TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA',
+    headerRatio: '45% / 55%',
+    defaultOpening: 'GIÁM ĐỐC TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA',
+    legalBases: [
+      'Căn cứ Luật Ngân sách nhà nước số 83/2015/QH13 ngày 25 tháng 6 năm 2015;',
+      'Căn cứ Nghị định số 30/2020/NĐ-CP ngày 05 tháng 3 năm 2020 của Chính phủ về công tác văn thư;',
+      'Căn cứ Quyết định số 128/QĐ-TĐC quy định chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Trung tâm Mã số, mã vạch Quốc gia;',
+      'Căn cứ Quyết định giao quyền tự chủ tài chính cho Trung tâm Mã số, mã vạch Quốc gia;',
+      'Theo đề nghị của Trưởng phòng Phòng Kế hoạch Tài chính,'
+    ],
+    defaultClosing: 'Trưởng phòng Phòng Tổ chức - Hành chính, Trưởng phòng Phòng Kế hoạch Tài chính, Thủ trưởng các phòng, đơn vị trực thuộc Trung tâm và các cá nhân có liên quan chịu trách nhiệm thi hành Quyết định này./.',
+    distributionList: ['- Như Điều 3;', '- Ban Giám đốc;', '- Lưu: VT, KHTC.'],
+    defaultSignerRole: 'GIÁM ĐỐC',
+    defaultContent: `Điều 1. Phê duyệt kèm theo Quyết định này dự toán chi tiết thực hiện nhiệm vụ: "Nâng cấp cơ sở dữ liệu quốc gia về mã số mã vạch và cổng thông tin truy xuất năm 2026" với các nội dung chủ yếu sau:
+1. Tên nhiệm vụ: Nâng cấp cơ sở dữ liệu quốc gia về mã số mã vạch và cổng thông tin truy xuất năm 2026.
+2. Đơn vị thực hiện: Phòng Kế hoạch Tài chính chủ trì, phối hợp với các đơn vị liên quan.
+3. Tổng kinh phí phê duyệt: 120.000.000 đồng (Bằng chữ: Một trăm hai mươi triệu đồng chẵn).
+(Chi tiết theo Phụ lục dự toán kèm theo Quyết định này).
+4. Nguồn kinh phí: Nguồn thu hoạt động sự nghiệp của Trung tâm.
+5. Thời gian thực hiện: Quý IV năm 2026.
+
+Điều 2. Trách nhiệm tổ chức thực hiện
+1. Phòng Kế hoạch Tài chính chịu trách nhiệm quản lý, sử dụng kinh phí được phê duyệt đúng mục đích, tiết kiệm, hiệu quả và thanh quyết toán theo khối lượng thực tế, định mức chi tiêu hiện hành của Nhà nước và Quy chế chi tiêu nội bộ của Trung tâm.
+2. Các đơn vị liên quan có trách nhiệm phối hợp triển khai thực hiện nhiệm vụ bảo đảm chất lượng và tiến độ quy định.
+
+Điều 3. Điều khoản thi hành
+Quyết định này có hiệu lực kể từ ngày ký. Trưởng phòng Phòng Tổ chức - Hành chính, Trưởng phòng Phòng Kế hoạch Tài chính, Thủ trưởng các phòng, đơn vị trực thuộc Trung tâm và các cá nhân có liên quan chịu trách nhiệm thi hành Quyết định này./.`,
   },
   {
     id: 'to-trinh',
