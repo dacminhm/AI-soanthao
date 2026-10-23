@@ -58,6 +58,33 @@ function normalizePhieuTrinhSections(rawText: string): string {
   return text;
 }
 
+
+/**
+ * Chuẩn hóa danh sách tài liệu kèm theo khi xuất file Word:
+ * Thêm gạch đầu dòng '- ', phân cách bằng ';', dòng cuối kết thúc bằng '.'
+ */
+function formatAttachedDocuments(docs?: string[] | string): string[] {
+  if (!docs) return [];
+  const list = Array.isArray(docs)
+    ? docs.map((s) => (s ? String(s).trim() : '')).filter(Boolean)
+    : String(docs).split('\n').map((s) => s.trim()).filter(Boolean);
+
+  if (list.length === 0) {
+    return [
+      '- Dự thảo Công văn;',
+      '- Công văn đến số ....;',
+      '- Quyết định số ......;',
+      '- Tài liệu khác.',
+    ];
+  }
+
+  return list.map((item, idx) => {
+    let clean = item.replace(/^[-*•–—]\s*/, '').replace(/[;.]+$/, '');
+    const isLast = idx === list.length - 1;
+    return `- ${clean}${isLast ? '.' : ';'}`;
+  });
+}
+
 async function generatePhieuTrinhDocx(doc: DocumentState): Promise<Blob> {
   const FONT_FAMILY = 'Times New Roman';
 

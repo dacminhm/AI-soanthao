@@ -156,24 +156,25 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
   // Structured subfields state for Phieu Trinh
   const [ptData, setPtData] = useState<PhieuTrinhFields>(() => parsePhieuTrinh(doc.content));
 
+  const lastBuiltContentRef = useRef<string>('');
+
   // Sync ptData when doc.content changes externally (e.g. from AI or template load)
   useEffect(() => {
     if (isPhieuTrinh && doc.content) {
-      const currentBuilt = buildPhieuTrinh(ptData);
-      if (doc.content !== currentBuilt) {
+      if (doc.content !== lastBuiltContentRef.current) {
+        lastBuiltContentRef.current = doc.content;
         setPtData(parsePhieuTrinh(doc.content));
       }
     }
   }, [doc.content, isPhieuTrinh]);
 
-  // Handler for updating any subfield of Phieu Trinh
+  // Handler for updating any subfield of Phieu Trinh (executed outside React state updater)
   const handleUpdatePtField = (field: keyof PhieuTrinhFields, value: string) => {
-    setPtData((prev) => {
-      const next = { ...prev, [field]: value };
-      const built = buildPhieuTrinh(next);
-      onUpdateField('content', built);
-      return next;
-    });
+    const next = { ...ptData, [field]: value };
+    setPtData(next);
+    const built = buildPhieuTrinh(next);
+    lastBuiltContentRef.current = built;
+    onUpdateField('content', built);
   };
 
   // Attached documents view mode and state handlers for Phieu Trinh
@@ -405,7 +406,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
             activeStep === 1 ? 'ring-2 ring-slate-300 border-2 border-slate-400' : 'border border-gray-200'
           }`}
           data-purpose="accordion-general-info"
-          onFocusCapture={() => onStepChange?.(1)}
+          onFocusCapture={() => { if (activeStep !== 1) onStepChange?.(1); }}
         >
           {/* Header Accordion Toggle */}
           <div
@@ -828,7 +829,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               : 'border border-gray-200'
           }`}
           data-purpose="accordion-body-content"
-          onFocusCapture={() => onStepChange?.(2)}
+          onFocusCapture={() => { if (activeStep !== 2) onStepChange?.(2); }}
         >
           {/* Active Section Header */}
           <div
@@ -1444,7 +1445,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               : 'border border-gray-200'
           }`}
           data-purpose="accordion-signatures"
-          onFocusCapture={() => onStepChange?.(3)}
+          onFocusCapture={() => { if (activeStep !== 3) onStepChange?.(3); }}
         >
           <div
             onClick={() => {
