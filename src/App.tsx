@@ -298,6 +298,8 @@ export default function App() {
         issuingAgency: document.issuingAgency,
         signerRole: document.signerRole,
         signerName: document.signerName,
+        staffSignerName: document.staffSignerName,
+        departmentHeadName: document.departmentHeadName,
         placeDate: document.placeDate,
         webViewLink: uploadRes.webViewLink,
       };
@@ -427,6 +429,8 @@ export default function App() {
       signerRole: draft.signerRole || 'GIÁM ĐỐC',
       signerName: draft.signerName || 'Bùi Bá Chính',
       legalBases: draft.legalBases || [],
+      staffSignerName: draft.staffSignerName || '',
+      departmentHeadName: draft.departmentHeadName || 'Nguyễn Đắc Minh',
     });
     setCurrentTab('editor');
     showNotification(`Đã tải dự thảo "${draft.title}" vào trình soạn thảo.`);
@@ -468,6 +472,7 @@ export default function App() {
       docType: tmpl.name,
       opening: tmpl.defaultOpening,
       closing: tmpl.defaultClosing,
+      content: tmpl.defaultContent || prev.content,
       distributionList: tmpl.distributionList,
       signerRole: tmpl.defaultSignerRole,
       legalBases: tmpl.legalBases,

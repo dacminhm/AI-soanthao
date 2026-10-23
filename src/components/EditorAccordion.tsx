@@ -23,6 +23,109 @@ interface AICallbackWarning {
   de_xuat_sua: string;
 }
 
+
+interface PhieuTrinhFields {
+  chiDao: string;
+  tienDo: string;
+  congViec: string;
+  ketQua: string;
+  yKienDonVi: string;
+  deXuat: string;
+  kienNghi: string;
+}
+
+function normalizePhieuTrinhSections(rawText: string): string {
+  let text = (rawText || '').replace(/Trân trọng\.\/\./g, '').trim();
+
+  text = text.replace(/([^\n])\s*(1\.\s*Tóm tắt nội dung công việc:?)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(2\.\s*Ý kiến của các đơn vị liên quan:?)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(3\.\s*Ý kiến của đơn vị trình:?)/gi, '$1\n$2');
+  text = text.replace(/(1\.\s*Tóm tắt nội dung công việc:?)\s*(Thực hiện chỉ đạo)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(-\s*Về tiến độ thực hiện:)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(-\s*Về các công việc đã thực hiện:)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(-\s*Kết quả đạt được:)/gi, '$1\n$2');
+  text = text.replace(/(2\.\s*Ý kiến của các đơn vị liên quan:?)\s*([^\n]+)/gi, (match, h, rest) => {
+    if (rest.trim()) return `${h}\n${rest.trim()}`;
+    return match;
+  });
+  text = text.replace(/(3\.\s*Ý kiến của đơn vị trình:?)\s*(a\)\s*Ý kiến đề xuất:?)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(b\)\s*Kiến nghị:?)/gi, '$1\n$2');
+  text = text.replace(/([^\n])\s*(Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm)/gi, '$1\n$2');
+
+  return text;
+}
+
+function parsePhieuTrinh(raw: string): PhieuTrinhFields {
+  if (!raw) {
+    return {
+      chiDao: '',
+      tienDo: '',
+      congViec: '',
+      ketQua: '',
+      yKienDonVi: '',
+      deXuat: '',
+      kienNghi: '',
+    };
+  }
+
+  let chiDao = '';
+  const cdMatch = raw.match(/Thực hiện chỉ đạo của Lãnh đạo Trung tâm tại\s*([^\n\r]*?)(?=(?:\r?\n\s*-\s*Về|\r?\n\s*-\s*Kết quả|$))/i);
+  if (cdMatch && cdMatch[1].trim() !== '...') chiDao = cdMatch[1].trim();
+
+  let tienDo = '';
+  const tdMatch = raw.match(/-\s*Về tiến độ thực hiện:\s*([^\n\r]*?)(?=(?:\r?\n\s*-\s*Về các công việc|\r?\n\s*-\s*Kết quả|$))/i);
+  if (tdMatch && tdMatch[1].trim() !== '...') tienDo = tdMatch[1].trim();
+
+  let congViec = '';
+  const cvMatch = raw.match(/-\s*Về các công việc đã thực hiện:\s*([^\n\r]*?)(?=(?:\r?\n\s*-\s*Kết quả|\r?\n\s*2\.|$))/i);
+  if (cvMatch && cvMatch[1].trim() !== '...') congViec = cvMatch[1].trim();
+
+  let ketQua = '';
+  const kqMatch = raw.match(/-\s*Kết quả đạt được:\s*([^\n\r]*?)(?=(?:\r?\n\s*2\.|\r?\n\s*3\.|$))/i);
+  if (kqMatch && kqMatch[1].trim() !== '...') ketQua = kqMatch[1].trim();
+
+  let yKienDonVi = '';
+  const ykMatch = raw.match(/2\.\s*Ý kiến của các đơn vị liên quan:\s*([\s\S]*?)(?=(?:\r?\n\s*3\.\s*Ý kiến|$))/i);
+  if (ykMatch) {
+    const val = ykMatch[1].trim();
+    if (!val.includes('Nội dung tóm tắt ý kiến')) yKienDonVi = val;
+  }
+
+  let deXuat = '';
+  const dxMatch = raw.match(/a\)\s*Ý kiến đề xuất:\s*([\s\S]*?)(?=(?:\r?\n\s*b\)\s*Kiến nghị:|$))/i);
+  if (dxMatch) {
+    const val = dxMatch[1].trim();
+    if (!val.includes('[Nêu rõ phương án')) deXuat = val;
+  }
+
+  let kienNghi = '';
+  const knMatch = raw.match(/b\)\s*Kiến nghị:\s*([\s\S]*?)(?=(?:\r?\n\s*Phòng Kế hoạch Tài chính kính trình|$))/i);
+  if (knMatch) {
+    const val = knMatch[1].trim();
+    if (!val.includes('[Nêu cụ thể')) kienNghi = val;
+  }
+
+  return { chiDao, tienDo, congViec, ketQua, yKienDonVi, deXuat, kienNghi };
+}
+
+function buildPhieuTrinh(data: PhieuTrinhFields): string {
+  const cd = data.chiDao.trim() || '...';
+  const td = data.tienDo.trim() || '...';
+  const cv = data.congViec.trim() || '...';
+  const kq = data.ketQua.trim() || '...';
+
+  const m1 = `1. Tóm tắt nội dung công việc:\nThực hiện chỉ đạo của Lãnh đạo Trung tâm tại ${cd}\n- Về tiến độ thực hiện: ${td}\n- Về các công việc đã thực hiện: ${cv}\n- Kết quả đạt được: ${kq}`;
+
+  const m2 = `2. Ý kiến của các đơn vị liên quan:\n${data.yKienDonVi.trim() || 'Nội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan.'}`;
+
+  const dx = data.deXuat.trim() || '[Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]';
+  const kn = data.kienNghi.trim() || '[Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]';
+
+  const m3 = `3. Ý kiến của đơn vị trình:\na) Ý kiến đề xuất: ${dx}\nb) Kiến nghị: ${kn}\nPhòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`;
+
+  return `${m1}\n\n${m2}\n\n${m3}`;
+}
+
 export const EditorAccordion: React.FC<EditorAccordionProps> = ({
   document: doc,
   onUpdateField,
@@ -40,6 +143,38 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
   const [isProcessingAI, setIsProcessingAI] = useState<boolean>(false);
   const [activeAIMode, setActiveAIMode] = useState<string>('');
   const [aiWarnings, setAiWarnings] = useState<AICallbackWarning[]>([]);
+
+  // Check if current document is Phieu Trinh
+  const isPhieuTrinh =
+    doc.docType?.toLowerCase().includes('phiếu trình') ||
+    doc.docType?.toLowerCase().includes('phieutrinh') ||
+    doc.docType === 'phieutrinh';
+
+  // Toggle view mode for Phieu Trinh: structured form vs full-text editor
+  const [phieuTrinhViewMode, setPhieuTrinhViewMode] = useState<'structured' | 'fulltext'>('structured');
+
+  // Structured subfields state for Phieu Trinh
+  const [ptData, setPtData] = useState<PhieuTrinhFields>(() => parsePhieuTrinh(doc.content));
+
+  // Sync ptData when doc.content changes externally (e.g. from AI or template load)
+  useEffect(() => {
+    if (isPhieuTrinh && doc.content) {
+      const currentBuilt = buildPhieuTrinh(ptData);
+      if (doc.content !== currentBuilt) {
+        setPtData(parsePhieuTrinh(doc.content));
+      }
+    }
+  }, [doc.content, isPhieuTrinh]);
+
+  // Handler for updating any subfield of Phieu Trinh
+  const handleUpdatePtField = (field: keyof PhieuTrinhFields, value: string) => {
+    setPtData((prev) => {
+      const next = { ...prev, [field]: value };
+      const built = buildPhieuTrinh(next);
+      onUpdateField('content', built);
+      return next;
+    });
+  };
   // User custom prompt for AI writing
   const [aiCustomPrompt, setAiCustomPrompt] = useState<string>('');
 
@@ -116,7 +251,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
   };
 
   // Trigger Gemini AI processing (Full Document Rewrite & Refinement)
-  const handleCallAI = async (mode: 'standardize' | 'audit' | 'suggest_msmv' = 'standardize') => {
+  const handleCallAI = async (mode: 'standardize' | 'audit' | 'suggest_msmv' | 'phieutrinh' = 'standardize') => {
     const hasPrompt = aiCustomPrompt && aiCustomPrompt.trim().length > 0;
     const hasExistingContent =
       (doc.content && doc.content.trim().length > 0) ||
@@ -130,14 +265,16 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
     }
 
     setAiValidationErrors({ opening: false, content: false });
+    const aiEffectiveMode = isPhieuTrinh ? 'phieutrinh' : mode;
     setIsProcessingAI(true);
-    setActiveAIMode(mode);
+    setActiveAIMode(aiEffectiveMode);
     try {
       const response = await fetch('/api/ai/process-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode,
+          mode: aiEffectiveMode,
+          docType: doc.docType,
           subject: doc.subject,
           recipient: doc.recipient,
           opening: doc.opening,
@@ -154,7 +291,9 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
         if (d.kinh_gui) onUpdateField('recipient', d.kinh_gui);
         if (d.phan_mo_dau) onUpdateField('opening', d.phan_mo_dau);
         if (d.cac_y_kien_noi_dung && Array.isArray(d.cac_y_kien_noi_dung)) {
-          onUpdateField('content', d.cac_y_kien_noi_dung.join('\n\n'));
+          const rawJoined = d.cac_y_kien_noi_dung.join('\n\n');
+          const finalContent = isPhieuTrinh ? normalizePhieuTrinhSections(rawJoined) : rawJoined;
+          onUpdateField('content', finalContent);
         }
         if (d.phan_ket_luan) {
           onUpdateField('closing', d.phan_ket_luan.replace(/Trân trọng\.\/\./g, '').trim());
@@ -388,22 +527,57 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                   </p>
                 </div>
 
-                {/* Fixed Document Type */}
+                {/* Document Type Selector */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Loại hình văn bản
                   </label>
                   <div className="relative">
-                    <input
-                      type="text"
-                      disabled
-                      value={doc.docType}
-                      className="w-full text-xs rounded-lg bg-slate-100 border-gray-300 text-gray-700 font-bold cursor-not-allowed pl-8"
-                    />
-                    <i className="fa-solid fa-lock absolute left-3 top-2.5 text-xs text-gray-400"></i>
+                    <select
+                      value={isPhieuTrinh ? 'phieutrinh' : (doc.docType || 'congvan')}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'phieutrinh') {
+                          onUpdateField('docType', 'PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC');
+                          if (!doc.docSymbol || doc.docSymbol === '/MSMV-KHTC') {
+                            onUpdateField('docSymbol', '/PTr-MSMV');
+                          }
+                          if (!doc.recipient || doc.recipient === 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia') {
+                            onUpdateField('recipient', 'Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia');
+                          }
+                          if (!doc.opening || doc.opening.includes('Phúc đáp công văn số')) {
+                            onUpdateField('opening', 'Kính gửi: Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia');
+                          }
+                          if (!doc.closing || doc.closing.includes('Trung tâm Mã số')) {
+                            onUpdateField('closing', 'Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.');
+                          }
+                          if (!doc.departmentHeadName) {
+                            onUpdateField('departmentHeadName', 'Nguyễn Đắc Minh');
+                          }
+                          if (!doc.content || doc.content.includes('nâng cấp máy chủ cơ sở dữ liệu')) {
+                            const defaultPT = `1. Tóm tắt nội dung công việc:\nThực hiện chỉ đạo của Lãnh đạo Trung tâm tại ...\n- Về tiến độ thực hiện: ...\n- Về các công việc đã thực hiện: ...\n- Kết quả đạt được: ...\n\n2. Ý kiến của các đơn vị liên quan:\nNội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan.\n\n3. Ý kiến của đơn vị trình:\na) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]\nb) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]\nPhòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`;
+                            onUpdateField('content', defaultPT);
+                          }
+                          onNotify('Đã chuyển sang mẫu: PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC');
+                        } else if (val === 'congvan' || val === 'CÔNG VĂN HÀNH CHÍNH') {
+                          onUpdateField('docType', 'CÔNG VĂN HÀNH CHÍNH');
+                          if (doc.docSymbol === '/PTr-MSMV') onUpdateField('docSymbol', '/MSMV-KHTC');
+                          onNotify('Đã chuyển sang mẫu: CÔNG VĂN HÀNH CHÍNH');
+                        } else {
+                          onUpdateField('docType', val);
+                        }
+                      }}
+                      className="w-full text-xs rounded-lg bg-white border border-slate-300 hover:border-slate-400 focus:border-amber-600 focus:ring-amber-200 text-slate-800 font-bold py-2 pl-3 pr-8 cursor-pointer shadow-2xs"
+                    >
+                      <option value="congvan">CÔNG VĂN HÀNH CHÍNH</option>
+                      <option value="phieutrinh">PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC</option>
+                      <option value="TỜ TRÌNH">TỜ TRÌNH</option>
+                      <option value="QUYẾT ĐỊNH CÁ BIỆT">QUYẾT ĐỊNH CÁ BIỆT</option>
+                      <option value="THÔNG BÁO NỘI BỘ">THÔNG BÁO NỘI BỘ</option>
+                    </select>
                   </div>
-                  <p className="text-[10px] text-slate-600 font-medium mt-1">
-                    ✓ Đã cố định định dạng công văn theo đúng mẫu hành chính
+                  <p className="text-[10px] text-amber-800 font-medium mt-1">
+                    {isPhieuTrinh ? '✓ Đang kích hoạt cấu trúc Phiếu trình chuẩn NĐ 30/2020' : '✓ Chuẩn thể thức văn bản hành chính Nghị định 30/2020/NĐ-CP'}
                   </p>
                 </div>
               </div>
@@ -412,12 +586,19 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               <div className="space-y-3 pt-1 border-t border-gray-100">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Trích yếu nội dung (V/v) - Cỡ 12, chữ đứng, căn giữa, cách dòng single (0, 0)
+                    {isPhieuTrinh
+                      ? 'Vấn đề trình (Nội dung trình Lãnh đạo Trung tâm giải quyết)'
+                      : 'Trích yếu nội dung (V/v) - Cỡ 12, chữ đứng, căn giữa, cách dòng single (0, 0)'}
                   </label>
                   <input
                     type="text"
                     value={doc.subject}
                     onChange={(e) => onUpdateField('subject', e.target.value)}
+                    placeholder={
+                      isPhieuTrinh
+                        ? 'Nhập vấn đề trình (VD: Phê duyệt phương án thẩm định và ban hành văn bản hướng dẫn)...'
+                        : 'V/v ...'
+                    }
                     className="w-full text-xs rounded-lg border-gray-300 focus:ring-amber-600 focus:border-amber-600 font-normal text-center"
                   />
                 </div>
@@ -585,20 +766,201 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                 </div>
               </div>
 
-              {/* Section Main Body (Rich-Text Editor) */}
+              {/* Section Main Body */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center">
                     <i className="fa-solid fa-pen-nib text-amber-800 mr-1.5"></i>
-                    Nội dung các điểm / điều khoản
+                    {isPhieuTrinh ? 'Nội dung Phiếu trình giải quyết công việc' : 'Nội dung các điểm / điều khoản'}
                   </label>
-                  <span className="text-xs text-gray-500 font-medium hidden sm:inline">
-                    Font Times New Roman • Căn đều 2 bên
-                  </span>
+                  {isPhieuTrinh && (
+                    <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setPhieuTrinhViewMode('structured')}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
+                          phieuTrinhViewMode === 'structured'
+                            ? 'bg-white text-amber-900 shadow-2xs border border-amber-200'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <i className="fa-solid fa-table-list text-[10px]"></i>
+                        <span>Khung cấu trúc (Mục 1, 2, 3)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhieuTrinhViewMode('fulltext')}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
+                          phieuTrinhViewMode === 'fulltext'
+                            ? 'bg-white text-amber-900 shadow-2xs border border-amber-200'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <i className="fa-solid fa-pen-to-square text-[10px]"></i>
+                        <span>Soạn thảo tự do</span>
+                      </button>
+                    </div>
+                  )}
+                  {!isPhieuTrinh && (
+                    <span className="text-xs text-gray-500 font-medium hidden sm:inline">
+                      Font Times New Roman • Căn đều 2 bên
+                    </span>
+                  )}
                 </div>
 
-                {/* Editor Wrapper: Sạch sẽ, sáng sủa, thanh công cụ nằm ngay sát trên khung nội dung */}
-                <div
+                {isPhieuTrinh && phieuTrinhViewMode === 'structured' ? (
+                  /* ========================================================= */
+                  /* KHUNG SOẠN THẢO CẤU TRÚC CHI TIẾT CHO PHIẾU TRÌNH         */
+                  /* ========================================================= */
+                  <div className="space-y-3.5 bg-gradient-to-b from-slate-50/80 to-amber-50/20 p-3 sm:p-4 rounded-xl border border-amber-200/80 shadow-2xs">
+                    {/* MỤC 1: TÓM TẮT NỘI DUNG CÔNG VIỆC */}
+                    <div className="bg-white rounded-xl p-3.5 border border-amber-200 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-amber-100 pb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-5 h-5 rounded-md bg-slate-900 text-amber-400 font-bold text-[10px] flex items-center justify-center">1</span>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">1. Tóm tắt nội dung công việc</h4>
+                        </div>
+                        <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          4 nhánh bắt buộc
+                        </span>
+                      </div>
+
+                      {/* 1.1 Câu dẫn đầu */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          Câu dẫn đầu chỉ đạo của Lãnh đạo Trung tâm:
+                        </label>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5">
+                          <span className="text-[11px] text-slate-700 font-semibold shrink-0 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 select-none">
+                            Thực hiện chỉ đạo của Lãnh đạo Trung tâm tại:
+                          </span>
+                          <input
+                            type="text"
+                            value={ptData.chiDao}
+                            onChange={(e) => handleUpdatePtField('chiDao', e.target.value)}
+                            placeholder="Thông báo kết luận số 45/TB-MSMV ngày 10/10/2026..."
+                            className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 1.2 Tiến độ thực hiện */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <span className="text-amber-800 font-bold">•</span>
+                          <span>Về tiến độ thực hiện:</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={ptData.tienDo}
+                          onChange={(e) => handleUpdatePtField('tienDo', e.target.value)}
+                          placeholder="Nêu rõ tiến độ thực hiện nhiệm vụ (đúng hạn, trước hạn hay đang triển khai theo kế hoạch)..."
+                          className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed"
+                        />
+                      </div>
+
+                      {/* 1.3 Công việc đã thực hiện */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <span className="text-amber-800 font-bold">•</span>
+                          <span>Về các công việc đã thực hiện:</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={ptData.congViec}
+                          onChange={(e) => handleUpdatePtField('congViec', e.target.value)}
+                          placeholder="Liệt kê chi tiết các công việc đã triển khai, dự thảo văn bản hoặc hồ sơ kỹ thuật đã xử lý..."
+                          className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed"
+                        />
+                      </div>
+
+                      {/* 1.4 Kết quả đạt được */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <span className="text-amber-800 font-bold">•</span>
+                          <span>Kết quả đạt được:</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={ptData.ketQua}
+                          onChange={(e) => handleUpdatePtField('ketQua', e.target.value)}
+                          placeholder="Nêu rõ các kết quả, sản phẩm, dữ liệu hoặc số liệu cụ thể đạt được..."
+                          className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed"
+                        />
+                      </div>
+                    </div>
+
+                    {/* MỤC 2: Ý KIẾN CỦA CÁC ĐƠN VỊ LIÊN QUAN */}
+                    <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2">
+                      <div className="flex items-center space-x-2 border-b border-slate-100 pb-2">
+                        <span className="w-5 h-5 rounded-md bg-slate-900 text-amber-400 font-bold text-[10px] flex items-center justify-center">2</span>
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">2. Ý kiến của các đơn vị liên quan:</h4>
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={ptData.yKienDonVi}
+                        onChange={(e) => handleUpdatePtField('yKienDonVi', e.target.value)}
+                        placeholder="Nội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan..."
+                        className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed"
+                      />
+                    </div>
+
+                    {/* MỤC 3: Ý KIẾN CỦA ĐƠN VỊ TRÌNH */}
+                    <div className="bg-white rounded-xl p-3.5 border border-amber-200 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-amber-100 pb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-5 h-5 rounded-md bg-slate-900 text-amber-400 font-bold text-[10px] flex items-center justify-center">3</span>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">3. Ý kiến của đơn vị trình:</h4>
+                        </div>
+                        <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          Đề xuất &amp; Kiến nghị
+                        </span>
+                      </div>
+
+                      {/* 3.a Ý kiến đề xuất */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <span className="text-amber-800 font-bold">a)</span>
+                          <span>Ý kiến đề xuất (phương án, giải pháp hoặc thẩm quyền xử lý):</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={ptData.deXuat}
+                          onChange={(e) => handleUpdatePtField('deXuat', e.target.value)}
+                          placeholder="a) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]"
+                          className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed"
+                        />
+                      </div>
+
+                      {/* 3.b Kiến nghị */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <span className="text-amber-800 font-bold">b)</span>
+                          <span>Kiến nghị (nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm):</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={ptData.kienNghi}
+                          onChange={(e) => handleUpdatePtField('kienNghi', e.target.value)}
+                          placeholder="b) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]"
+                          className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-amber-600 focus:ring-amber-200 text-slate-800 leading-relaxed"
+                        />
+                      </div>
+
+                      {/* Câu kết chuẩn cố định của Mục 3 */}
+                      <div className="p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 flex items-start gap-2">
+                        <i className="fa-solid fa-circle-check text-amber-700 text-xs mt-0.5"></i>
+                        <div>
+                          <span className="text-[11px] font-bold text-amber-900 block">Câu kết chuẩn NĐ 30 đã tích hợp tự động:</span>
+                          <p className="text-xs text-amber-900 italic mt-0.5 font-medium">
+                            &quot;Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.&quot;
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
                   className={`rounded-xl overflow-hidden bg-white shadow-2xs transition-all ${
                     aiValidationErrors.content
                       ? 'border-2 border-amber-600 ring-2 ring-amber-100 bg-amber-50/10'
@@ -720,6 +1082,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                     </div>
                   )}
                 </div>
+                )}
               </div>
 
               {/* HỘP CẢNH BÁO THÔNG MINH (canh_bao_logic_va_ngu_phap) */}
@@ -798,7 +1161,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                         Trợ lý AI - Viết lại toàn bộ &amp; Tinh chỉnh
                       </span>
                       <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 hidden sm:inline">
-                        Gemini AI • Nghị định 30
+                        {isPhieuTrinh ? 'Gemini AI • Phiếu trình NĐ 30' : 'Gemini AI • Nghị định 30'}
                       </span>
                     </div>
                     <span className="text-[10px] text-slate-400 font-medium hidden md:inline">
@@ -814,10 +1177,14 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey && !isProcessingAI) {
                           e.preventDefault();
-                          handleCallAI('standardize');
+                          handleCallAI(isPhieuTrinh ? 'phieutrinh' : 'standardize');
                         }
                       }}
-                      placeholder="Nhập yêu cầu để AI viết lại toàn bộ hoặc tinh chỉnh (VD: Viết lại toàn bộ công văn theo hướng khẩn trương, bổ sung căn cứ pháp lý và thời hạn bàn giao...)"
+                      placeholder={
+                        isPhieuTrinh
+                          ? "Nhập yêu cầu để AI tự động phân bổ vào 4 nhánh Mục 1 và 2 nhánh Mục 3 của Phiếu trình (VD: Ghi nhận kết quả thẩm định ngày 20/10, tiến độ đúng hạn và kiến nghị Lãnh đạo ký ban hành...)"
+                          : "Nhập yêu cầu để AI viết lại toàn bộ hoặc tinh chỉnh (VD: Viết lại toàn bộ công văn theo hướng khẩn trương, bổ sung căn cứ pháp lý và thời hạn bàn giao...)"
+                      }
                       className="w-full text-xs text-slate-800 placeholder:text-slate-400 placeholder:italic outline-none resize-none font-normal leading-relaxed custom-scrollbar py-1"
                     />
 
@@ -836,7 +1203,7 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
                       <button
                         type="button"
                         disabled={isProcessingAI}
-                        onClick={() => handleCallAI('standardize')}
+                        onClick={() => handleCallAI(isPhieuTrinh ? 'phieutrinh' : 'standardize')}
                         className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                           isProcessingAI
                             ? 'bg-amber-600 text-white'
@@ -894,10 +1261,12 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
               </div>
               <div className="text-left">
                 <h2 className="text-sm font-bold text-gray-800">
-                  Nơi nhận &amp; Thẩm quyền ký duyệt
+                  {isPhieuTrinh ? 'Đơn vị trình & Cán bộ ký xác nhận' : 'Nơi nhận & Thẩm quyền ký duyệt'}
                 </h2>
                 <p className="text-xs text-gray-500">
-                  {doc.signerRole} {doc.signerName} • {doc.distributionList.length} địa chỉ nơi nhận mặc định
+                  {isPhieuTrinh
+                    ? `Chuyên viên & Trưởng phòng: ${doc.departmentHeadName || 'Nguyễn Đắc Minh'} • Nơi nhận: Lãnh đạo Trung tâm`
+                    : `${doc.signerRole} ${doc.signerName} • ${doc.distributionList.length} địa chỉ nơi nhận mặc định`}
                 </p>
               </div>
             </div>
@@ -915,139 +1284,191 @@ export const EditorAccordion: React.FC<EditorAccordionProps> = ({
 
           {isBlock3Open && (
             <div className="p-5 space-y-4 border-t border-gray-100 animate-in fade-in duration-150">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Nơi nhận mặc định */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-semibold text-gray-700 flex items-center">
-                      Danh sách nơi nhận (Cỡ 11, chữ đứng)
-                      {!unlockedFields.distributionList && (
-                        <i className="fa-solid fa-lock text-[10px] text-gray-400 ml-1.5" title="Dữ liệu chuẩn"></i>
-                      )}
-                    </label>
-                    {!unlockedFields.distributionList ? (
-                      <button
-                        type="button"
-                        onClick={() => onRequestUnlock('distributionList', 'Danh sách nơi nhận')}
-                        className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
-                      >
-                        Mở khóa sửa
-                      </button>
-                    ) : (
-                      <span className="text-[11px] text-emerald-600 font-semibold">Đã mở khóa</span>
-                    )}
+              {isPhieuTrinh ? (
+                /* PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC: Chỉ hiển thị 2 ô nhập họ tên */
+                <div className="space-y-4">
+                  <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2">
+                      <i className="fa-solid fa-circle-info text-amber-600 shrink-0"></i>
+                      <span>
+                        Ý kiến phê duyệt của Giám đốc/Lãnh đạo Trung tâm đã nằm ở khung bút phê phía trên. Phần cuối phiếu chỉ là phần xác nhận của đơn vị trình.
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-amber-200 shadow-2xs shrink-0 self-start sm:self-auto">
+                      4. Nơi nhận: Lãnh đạo Trung tâm
+                    </span>
                   </div>
-                  <textarea
-                    rows={4}
-                    readOnly={!unlockedFields.distributionList}
-                    value={doc.distributionList.join('\n')}
-                    onChange={(e) =>
-                      onUpdateField(
-                        'distributionList',
-                        e.target.value.split('\n').filter((l) => l.trim().length > 0)
-                      )
-                    }
-                    onClick={() => {
-                      if (!unlockedFields.distributionList) {
-                        onRequestUnlock('distributionList', 'Danh sách nơi nhận');
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Ô 1: Họ và tên Chuyên viên */}
+                    <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-200">
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Họ và tên Chuyên viên (Cột trái)
+                      </label>
+                      <input
+                        type="text"
+                        value={doc.staffSignerName || ''}
+                        onChange={(e) => onUpdateField('staffSignerName', e.target.value)}
+                        placeholder="Nhập họ và tên chuyên viên soạn thảo..."
+                        className="w-full text-xs rounded-lg font-medium bg-white border border-gray-300 text-gray-900 focus:border-amber-600 focus:ring-1 focus:ring-amber-200 px-3 py-2 transition"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1.5">
+                        In đậm bên dưới chữ ký chuyên viên ở cuối phiếu
+                      </p>
+                    </div>
+
+                    {/* Ô 2: Họ và tên Trưởng phòng (Mặc định: Nguyễn Đắc Minh) */}
+                    <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-200">
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Họ và tên Trưởng phòng (Cột phải)
+                      </label>
+                      <input
+                        type="text"
+                        value={doc.departmentHeadName ?? 'Nguyễn Đắc Minh'}
+                        onChange={(e) => onUpdateField('departmentHeadName', e.target.value)}
+                        placeholder="Nguyễn Đắc Minh"
+                        className="w-full text-xs rounded-lg font-bold bg-white border border-gray-300 text-gray-900 focus:border-amber-600 focus:ring-1 focus:ring-amber-200 px-3 py-2 transition"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1.5">
+                        Mặc định hiển thị: <strong className="text-slate-700">Nguyễn Đắc Minh</strong> (có thể chỉnh sửa khi cần)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* LAYOUT TIÊU CHUẨN CÔNG VĂN ĐI NĐ 30 */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Nơi nhận mặc định */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-gray-700 flex items-center">
+                        Danh sách nơi nhận (Cỡ 11, chữ đứng)
+                        {!unlockedFields.distributionList && (
+                          <i className="fa-solid fa-lock text-[10px] text-gray-400 ml-1.5" title="Dữ liệu chuẩn"></i>
+                        )}
+                      </label>
+                      {!unlockedFields.distributionList ? (
+                        <button
+                          type="button"
+                          onClick={() => onRequestUnlock('distributionList', 'Danh sách nơi nhận')}
+                          className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
+                        >
+                          Mở khóa sửa
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-emerald-600 font-semibold">Đã mở khóa</span>
+                      )}
+                    </div>
+                    <textarea
+                      rows={4}
+                      readOnly={!unlockedFields.distributionList}
+                      value={doc.distributionList.join('\n')}
+                      onChange={(e) =>
+                        onUpdateField(
+                          'distributionList',
+                          e.target.value.split('\n').filter((l) => l.trim().length > 0)
+                        )
                       }
-                    }}
-                    className={`w-full text-xs rounded-lg font-sans ${
-                      !unlockedFields.distributionList
-                        ? 'bg-gray-100 border-gray-300 text-gray-700 cursor-not-allowed'
-                        : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
-                    }`}
-                  />
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    Chuẩn nơi nhận công văn của Trung tâm MSMV
-                  </p>
-                </div>
-
-                {/* Người ký & Chức vụ */}
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-semibold text-gray-700 flex items-center">
-                        Chức danh ký (Cỡ 13-14, hoa, đậm)
-                        {!unlockedFields.signerRole && (
-                          <i className="fa-solid fa-lock text-[10px] text-gray-400 ml-1.5"></i>
-                        )}
-                      </label>
-                      {!unlockedFields.signerRole ? (
-                        <button
-                          type="button"
-                          onClick={() => onRequestUnlock('signerRole', 'Chức danh ký duyệt')}
-                          className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
-                        >
-                          Mở khóa sửa
-                        </button>
-                      ) : (
-                        <span className="text-[11px] text-emerald-600 font-semibold">Đã mở khóa</span>
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      readOnly={!unlockedFields.signerRole}
-                      value={doc.signerRole}
-                      onChange={(e) => onUpdateField('signerRole', e.target.value)}
                       onClick={() => {
-                        if (!unlockedFields.signerRole) {
-                          onRequestUnlock('signerRole', 'Chức danh ký duyệt');
+                        if (!unlockedFields.distributionList) {
+                          onRequestUnlock('distributionList', 'Danh sách nơi nhận');
                         }
                       }}
-                      className={`w-full text-xs rounded-lg font-bold ${
-                        !unlockedFields.signerRole
-                          ? 'bg-gray-100 border-gray-300 text-gray-800 cursor-not-allowed'
+                      className={`w-full text-xs rounded-lg font-sans ${
+                        !unlockedFields.distributionList
+                          ? 'bg-gray-100 border-gray-300 text-gray-700 cursor-not-allowed'
                           : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
                       }`}
                     />
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Chuẩn nơi nhận công văn của Trung tâm MSMV
+                    </p>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-semibold text-gray-700 flex items-center">
-                        Họ và tên người ký (Cỡ 13-14, đậm)
-                        {!unlockedFields.signerName && (
-                          <i className="fa-solid fa-lock text-[10px] text-gray-400 ml-1.5"></i>
+                  {/* Người ký & Chức vụ */}
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-gray-700 flex items-center">
+                          Chức danh ký (Cỡ 13-14, hoa, đậm)
+                          {!unlockedFields.signerRole && (
+                            <i className="fa-solid fa-lock text-[10px] text-gray-400 ml-1.5"></i>
+                          )}
+                        </label>
+                        {!unlockedFields.signerRole ? (
+                          <button
+                            type="button"
+                            onClick={() => onRequestUnlock('signerRole', 'Chức danh ký duyệt')}
+                            className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
+                          >
+                            Mở khóa sửa
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-emerald-600 font-semibold">Đã mở khóa</span>
                         )}
-                      </label>
-                      {!unlockedFields.signerName ? (
-                        <button
-                          type="button"
-                          onClick={() => onRequestUnlock('signerName', 'Họ tên người ký')}
-                          className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
-                        >
-                          Mở khóa sửa
-                        </button>
-                      ) : (
-                        <span className="text-[11px] text-emerald-600 font-semibold">Đã mở khóa</span>
-                      )}
+                      </div>
+                      <input
+                        type="text"
+                        readOnly={!unlockedFields.signerRole}
+                        value={doc.signerRole}
+                        onChange={(e) => onUpdateField('signerRole', e.target.value)}
+                        onClick={() => {
+                          if (!unlockedFields.signerRole) {
+                            onRequestUnlock('signerRole', 'Chức danh ký duyệt');
+                          }
+                        }}
+                        className={`w-full text-xs rounded-lg font-bold ${
+                          !unlockedFields.signerRole
+                            ? 'bg-gray-100 border-gray-300 text-gray-800 cursor-not-allowed'
+                            : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
+                        }`}
+                      />
                     </div>
-                    <input
-                      type="text"
-                      readOnly={!unlockedFields.signerName}
-                      value={doc.signerName}
-                      onChange={(e) => onUpdateField('signerName', e.target.value)}
-                      onClick={() => {
-                        if (!unlockedFields.signerName) {
-                          onRequestUnlock('signerName', 'Họ tên người ký');
-                        }
-                      }}
-                      className={`w-full text-xs rounded-lg font-bold ${
-                        !unlockedFields.signerName
-                          ? 'bg-gray-100 border-gray-300 text-gray-800 cursor-not-allowed'
-                          : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
-                      }`}
-                    />
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-gray-700 flex items-center">
+                          Họ và tên người ký (Cỡ 13-14, đậm)
+                          {!unlockedFields.signerName && (
+                            <i className="fa-solid fa-lock text-[10px] text-gray-400 ml-1.5"></i>
+                          )}
+                        </label>
+                        {!unlockedFields.signerName ? (
+                          <button
+                            type="button"
+                            onClick={() => onRequestUnlock('signerName', 'Họ tên người ký')}
+                            className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold"
+                          >
+                            Mở khóa sửa
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-emerald-600 font-semibold">Đã mở khóa</span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        readOnly={!unlockedFields.signerName}
+                        value={doc.signerName}
+                        onChange={(e) => onUpdateField('signerName', e.target.value)}
+                        onClick={() => {
+                          if (!unlockedFields.signerName) {
+                            onRequestUnlock('signerName', 'Họ tên người ký');
+                          }
+                        }}
+                        className={`w-full text-xs rounded-lg font-bold ${
+                          !unlockedFields.signerName
+                            ? 'bg-gray-100 border-gray-300 text-gray-800 cursor-not-allowed'
+                            : 'bg-white border-amber-600 text-gray-900 ring-1 ring-amber-200'
+                        }`}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
       </div>
-
-      
     </section>
   );
 };

@@ -19,6 +19,8 @@ export interface DocumentState {
   signerRole: string;
   signerName: string;
   legalBases: string[];
+  staffSignerName?: string;
+  departmentHeadName?: string;
 }
 
 export interface RuleViolation {
@@ -64,6 +66,8 @@ export function getDefaultDocumentState(): DocumentState {
       'Quyết định số 100/QĐ-TTg',
       'Quyết định số 128/QĐ-TĐC',
     ],
+    staffSignerName: '',
+    departmentHeadName: 'Nguyễn Đắc Minh',
   };
 }
 
@@ -134,7 +138,7 @@ export function validateDecree30Compliance(doc: DocumentState): RuleViolation[] 
   }
 
   // 5. Signer role check
-  if (!doc.signerRole || doc.signerRole.trim().length === 0) {
+  if (!isPhieuTrinh && (!doc.signerRole || doc.signerRole.trim().length === 0)) {
     violations.push({
       field: 'signerRole',
       severity: 'error',
@@ -143,7 +147,7 @@ export function validateDecree30Compliance(doc: DocumentState): RuleViolation[] 
   }
 
   // 6. Signer name check
-  if (!doc.signerName || doc.signerName.trim().length === 0) {
+  if (!isPhieuTrinh && (!doc.signerName || doc.signerName.trim().length === 0)) {
     violations.push({
       field: 'signerName',
       severity: 'error',
@@ -152,7 +156,7 @@ export function validateDecree30Compliance(doc: DocumentState): RuleViolation[] 
   }
 
   // 7. Check distribution list (Nơi nhận)
-  if (!doc.distributionList || doc.distributionList.length === 0) {
+  if (!isPhieuTrinh && (!doc.distributionList || doc.distributionList.length === 0)) {
     violations.push({
       field: 'distributionList',
       severity: 'warning',

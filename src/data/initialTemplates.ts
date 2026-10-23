@@ -12,6 +12,7 @@ export interface AdministrativeTemplate {
   defaultClosing: string;
   distributionList: string[];
   defaultSignerRole: string;
+  defaultContent?: string;
 }
 
 export interface StoredDraft {
@@ -19,7 +20,7 @@ export interface StoredDraft {
   title: string;
   docNumber: string;
   docSymbol: string;
-  category: 'congvan' | 'totrinh' | 'thongbao' | 'quyetdinh';
+  category: 'congvan' | 'totrinh' | 'thongbao' | 'quyetdinh' | 'phieutrinh';
   categoryLabel: string;
   updatedAt: string;
   author: string;
@@ -33,6 +34,8 @@ export interface StoredDraft {
   distributionList?: string[];
   signerRole?: string;
   signerName?: string;
+  staffSignerName?: string;
+  departmentHeadName?: string;
   parentAgency?: string;
   issuingAgency?: string;
   placeDate?: string;
@@ -59,6 +62,41 @@ export const INITIAL_TEMPLATES: AdministrativeTemplate[] = [
     defaultClosing: 'Trung tâm Mã số, mã vạch Quốc gia xin kính gửi Quý ... để tổng hợp và xử lý các công việc tiếp theo.\nTrân trọng./.',
     distributionList: ['- Như trên;', '- Chủ tịch Nguyễn Nam Hải (để b/c);', '- Lưu: VT, KHTC.'],
     defaultSignerRole: 'GIÁM ĐỐC',
+    defaultContent: `1. Về tình hình triển khai hạ tầng kỹ thuật và cổng thông tin truy xuất: Trung tâm đã hoàn thành việc nâng cấp máy chủ cơ sở dữ liệu quốc gia về mã số mã vạch, kết nối chia sẻ dữ liệu thử nghiệm với hơn 350 doanh nghiệp sản xuất và xuất nhập khẩu trên toàn quốc.
+
+2. Về công tác xây dựng tiêu chuẩn và quy chuẩn kỹ thuật: Đang khẩn trương phối hợp cùng các đơn vị chuyên môn hoàn thiện dự thảo tiêu chuẩn định danh số cho nhóm sản phẩm nông sản chủ lực, bảo đảm tính liên thông với tiêu chuẩn GS1 toàn cầu.`,
+  },
+  {
+    id: 'phieu-trinh',
+    name: 'PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC',
+    code: '/PTr-MSMV',
+    status: 'active',
+    statusLabel: 'Mặc định • Chuẩn hóa',
+    parentAgency: 'ỦY BAN TIÊU CHUẨN ĐO LƯỜNG CHẤT LƯỢNG QUỐC GIA',
+    issuingAgency: 'TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA',
+    headerRatio: '40% / 60%',
+    defaultOpening: 'Kính gửi: Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia',
+    legalBases: [
+      'Quy chế làm việc của Trung tâm Mã số, mã vạch Quốc gia',
+      'Nghị định 30/2020/NĐ-CP ngày 05/03/2020 của Chính phủ',
+      'Quyết định số 128/QĐ-TĐC quy định chức năng, nhiệm vụ của Trung tâm'
+    ],
+    defaultClosing: 'Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.',
+    distributionList: ['- Lãnh đạo Trung tâm (để b/c và chỉ đạo);', '- Lưu: VT, KHTC.'],
+    defaultSignerRole: 'TRƯỞNG PHÒNG KẾ HOẠCH TÀI CHÍNH',
+    defaultContent: `1. Tóm tắt nội dung công việc:
+Thực hiện chỉ đạo của Lãnh đạo Trung tâm tại ...
+- Về tiến độ thực hiện: ...
+- Về các công việc đã thực hiện: ...
+- Kết quả đạt được: ...
+
+2. Ý kiến của các đơn vị liên quan:
+Nội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan.
+
+3. Ý kiến của đơn vị trình:
+a) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]
+b) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]
+Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`,
   },
   {
     id: 'to-trinh',

@@ -68,7 +68,8 @@ Trả về chuỗi JSON hợp lệ khớp chính xác với cấu trúc:
 app.post('/api/ai/process-document', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
-      mode = 'standardize', // 'standardize' | 'audit' | 'suggest_msmv'
+      mode = 'standardize', // 'standardize' | 'audit' | 'suggest_msmv' | 'phieutrinh'
+      docType = '',
       subject = '',
       recipient = 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia',
       opening = '',
@@ -77,8 +78,34 @@ app.post('/api/ai/process-document', async (req: Request, res: Response): Promis
       customInstruction = '',
     } = req.body;
 
+    const isPhieuTrinh =
+      mode === 'phieutrinh' ||
+      (typeof docType === 'string' && docType.toLowerCase().includes('phiếu trình'));
+
     let userPromptDirective = '';
-    if (customInstruction && typeof customInstruction === 'string' && customInstruction.trim()) {
+    if (isPhieuTrinh) {
+      userPromptDirective = `Nhiệm vụ trọng tâm: SOẠN THẢO VÀ CHUẨN HÓA NỘI DUNG "PHIẾU TRÌNH GIẢI QUYẾT CÔNG VIỆC" CHO PHÒNG KẾ HOẠCH TÀI CHÍNH TRÌNH LÃNH ĐẠO TRUNG TÂM MÃ SỐ, MÃ VẠCH QUỐC GIA (NGHỊ ĐỊNH 30/2020/NĐ-CP).
+
+CHỈ THỊ ĐỊNH DẠNG XUỐNG DÒNG (\n) VÀ CẤU TRÚC BẮT BUỘC CHO PHIẾU TRÌNH:
+1. Kính gửi (kinh_gui): "Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia" (hoặc đích danh Giám đốc / Phó Giám đốc Trung tâm).
+2. Trích yếu (trich_yeu): Câu tóm tắt vấn đề trình (ví dụ: "Phê duyệt phương án thẩm định và ban hành văn bản hướng dẫn...").
+3. Đoạn mở đầu (phan_mo_dau): "Kính gửi: Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia"
+4. Thân bài (cac_y_kien_noi_dung): Mảng gồm đúng 3 phần tử tương ứng 3 mục chính. BẮT BUỘC PHẢI CHÈN KÝ TỰ XUỐNG DÒNG (\n) RÕ RÀNG GIỮA TỪNG Ý, KHÔNG ĐƯỢC VIẾT DÍNH THÀNH MỘT ĐOẠN:
+
+   - cac_y_kien_noi_dung[0] (MỤC 1): Bắt buộc gồm 5 dòng riêng biệt phân cách bằng \n:
+     "1. Tóm tắt nội dung công việc:\nThực hiện chỉ đạo của Lãnh đạo Trung tâm tại [nêu căn cứ chỉ đạo / thông báo kết luận / văn bản đến]...\n- Về tiến độ thực hiện: [mô tả tiến độ chi tiết, mốc thời gian]\n- Về các công việc đã thực hiện: [liệt kê chi tiết các việc đã làm, sản phẩm hoặc hồ sơ đã hoàn thành]\n- Kết quả đạt được: [nêu cụ thể kết quả, số liệu hoặc hiện trạng đạt được]"
+
+   - cac_y_kien_noi_dung[1] (MỤC 2): Gồm 2 dòng phân cách bằng \n:
+     "2. Ý kiến của các đơn vị liên quan:\n[Nội dung tóm tắt ý kiến phối hợp/thống nhất của các đơn vị chuyên môn liên quan]"
+
+   - cac_y_kien_noi_dung[2] (MỤC 3): Gồm 4 dòng riêng biệt phân cách bằng \n:
+     "3. Ý kiến của đơn vị trình:\na) Ý kiến đề xuất: [Nêu rõ phương án, giải pháp hoặc thẩm quyền xử lý]\nb) Kiến nghị: [Nêu cụ thể các kiến nghị đối với Lãnh đạo Trung tâm]\nPhòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../."
+
+   Tuyệt đối KHÔNG chèn câu "Trân trọng./." vào cuối Phiếu trình.
+
+5. Đoạn kết luận (phan_ket_luan): Luôn là: "Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../."
+${customInstruction ? `\nƯU TIÊN TUYỆT ĐỐI BÁM SÁT VÀ THỰC THI CHÍNH XÁC YÊU CẦU SAU CỦA NGƯỜI DÙNG:\n"${customInstruction.trim()}"` : ''}`;
+    } else if (customInstruction && typeof customInstruction === 'string' && customInstruction.trim()) {
       userPromptDirective = `Nhiệm vụ trọng tâm: SOẠN THẢO, VIẾT LẠI VÀ CHUẨN HÓA ĐỒNG BỘ TOÀN DIỆN TOÀN BỘ CÔNG VĂN THEO NGHỊ ĐỊNH 30/2020/NĐ-CP.
 ƯU TIÊN TUYỆT ĐỐI BÁM SÁT VÀ THỰC THI CHÍNH XÁC YÊU CẦU SAU CỦA NGƯỜI DÙNG:
 "${customInstruction.trim()}"
@@ -186,17 +213,55 @@ Yêu cầu: Hãy phân tích, hoàn thiện và trả về DUY NHẤT một đ�
     }
 
     // High-quality deterministic fallback if no API key is provided
-    const fallbackData = generateSmartFallback(mode, subject, recipient, opening, content, closing);
+    const fallbackData = generateSmartFallback(mode, subject, recipient, opening, content, closing, docType);
     res.json({ success: true, data: fallbackData, note: 'Generated with Administrative Knowledge Base' });
   } catch (error: any) {
     console.error('Error processing document AI:', error);
     // Return gracefully with structured administrative fallback
-    const fallbackData = generateSmartFallback('standardize', req.body?.subject, req.body?.recipient, req.body?.opening, req.body?.content, req.body?.closing);
+    const fallbackData = generateSmartFallback(req.body?.mode || 'standardize', req.body?.subject, req.body?.recipient, req.body?.opening, req.body?.content, req.body?.closing, req.body?.docType);
     res.json({ success: true, data: fallbackData, warning: error.message });
   }
 });
 
-function generateSmartFallback(mode: string, subject: string, recipient: string, opening: string, content: string, closing: string) {
+function generateSmartFallback(mode: string, subject: string, recipient: string, opening: string, content: string, closing: string, docType: string = '') {
+  const isPhieuTrinh =
+    mode === 'phieutrinh' ||
+    (typeof docType === 'string' && docType.toLowerCase().includes('phiếu trình'));
+
+  if (isPhieuTrinh) {
+    const normSubject = subject ? (subject.startsWith('V/v ') ? subject : `V/v ${subject}`) : 'V/v phê duyệt kế hoạch triển khai đề án mã số mã vạch năm 2026';
+    const normRecipient = 'Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia';
+    const normOpening = 'Kính gửi: Lãnh đạo Trung tâm Mã số, mã vạch Quốc gia';
+
+    const items = [
+      `1. Tóm tắt nội dung công việc:\nThực hiện chỉ đạo của Lãnh đạo Trung tâm tại Thông báo kết luận số 45/TB-MSMV ngày 10/10/2026;\n- Về tiến độ thực hiện: Phòng Kế hoạch Tài chính đã chủ động phối hợp với các phòng chuyên môn triển khai đảm bảo đúng tiến độ đề ra;\n- Về các công việc đã thực hiện: Đã hoàn thành việc rà soát hồ sơ kỹ thuật, xây dựng dự thảo văn bản hướng dẫn và lập dự toán kinh phí triển khai;\n- Kết quả đạt được: 100% các nội dung công việc trọng tâm đã hoàn thành dự thảo đúng thời hạn, bảo đảm tuân thủ quy định hiện hành.`,
+      `2. Ý kiến của các đơn vị liên quan:\nCác đơn vị chuyên môn liên quan đã phối hợp rà soát kỹ thuật và cơ bản thống nhất với phương án triển khai của Phòng Kế hoạch Tài chính.`,
+      `3. Ý kiến của đơn vị trình:\na) Ý kiến đề xuất: Kính đề nghị Lãnh đạo Trung tâm xem xét phê duyệt phương án triển khai và nội dung dự thảo công văn đính kèm.\nb) Kiến nghị: Giao Phòng Kế hoạch Tài chính chủ trì phối hợp với Văn phòng theo dõi, đôn đốc tiếp nhận văn bản phản hồi.\nPhòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.`
+    ];
+
+    const warnings = [
+      {
+        vi_tri: 'Mục 1 - Tiến độ thực hiện',
+        loi_nhan_xet: 'Cần ghi rõ số hiệu văn bản chỉ đạo của Lãnh đạo Trung tâm để hoàn thiện hồ sơ lưu trữ.',
+        de_xuat_sua: 'Thực hiện chỉ đạo của Lãnh đạo Trung tâm tại Thông báo kết luận số 45/TB-MSMV...'
+      }
+    ];
+
+    return {
+      trich_yeu: normSubject,
+      kinh_gui: normRecipient,
+      phan_mo_dau: normOpening,
+      can_cu_phap_ly: [
+        'Quy chế làm việc của Trung tâm Mã số, mã vạch Quốc gia',
+        'Nghị định số 30/2020/NĐ-CP ngày 05/03/2020 của Chính phủ về công tác văn thư',
+        'Quyết định số 128/QĐ-TĐC quy định chức năng, nhiệm vụ của Trung tâm'
+      ],
+      cac_y_kien_noi_dung: items,
+      phan_ket_luan: 'Phòng Kế hoạch Tài chính kính trình Lãnh đạo Trung tâm xem xét, cho ý kiến chỉ đạo và ký Công văn ....../.',
+      canh_bao_logic_va_ngu_phap: warnings
+    };
+  }
+
   const normRecipient = recipient || 'Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia';
   const normSubject = subject ? (subject.startsWith('V/v ') ? subject : `V/v ${subject}`) : 'V/v báo cáo về tình hình triển khai đề án mã số mã vạch và truy xuất nguồn gốc năm 2026';
   const normOpening = opening || 'Phúc đáp công văn số ..../TĐC-TCCB ngày .../.../2026 của Ban Tổ chức Cán bộ, Ủy ban Tiêu chuẩn Đo lường Chất lượng Quốc gia về việc báo cáo tiến độ các đề án trọng điểm, Trung tâm Mã số, mã vạch Quốc gia có một số ý kiến như sau:';
